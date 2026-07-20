@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/EnterpriseTaskManagement.API/EnterpriseTaskManagement.API.csproj" />
+    <Project Path="src/EnterpriseTaskManagement.Application/EnterpriseTaskManagement.Application.csproj" />
+    <Project Path="src/EnterpriseTaskManagement.Domain/EnterpriseTaskManagement.Domain.csproj" />
+    <Project Path="src/EnterpriseTaskManagement.Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/EnterpriseTaskManagement.Tests/EnterpriseTaskManagement.Tests.csproj" />
+  </Folder>
+</Solution>
