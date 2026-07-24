@@ -1,10 +1,12 @@
 namespace EnterpriseTaskManagement.Domain.Common.Interfaces;
+
 public interface IAuditable
 {
-    DateTimeOffset CreateAt {get;}
-    String CreateBy{get;}
-    DateTimeOffset? UpdatedAt {get;}
-    String? UpdatedBy {get;}
+    DateTimeOffset CreatedAt { get; }
 
+    string CreatedBy { get; }
 
+    DateTimeOffset? UpdatedAt { get; }
+
+    string? UpdatedBy { get; }
 }
