@@ -8,5 +8,9 @@ public interface IUserRepository
 
     Task<List<User>> GetAllAsync(CancellationToken cancellationToken);
 
+    Task<User?> GetByPublicIdAsync(
+        string publicId,
+        CancellationToken cancellationToken);
+
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }
