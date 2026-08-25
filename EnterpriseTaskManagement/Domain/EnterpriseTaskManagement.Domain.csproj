@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>EnterpriseTaskManagement.Domain</RootNamespace>
+    <AssemblyName>EnterpriseTaskManagement.Domain</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+
+  <!--
+    The Domain layer is intentionally dependency-free: no EF Core, no
+    ASP.NET Core, no MediatR, no third-party packages. Only the BCL.
+  -->
+
+</Project>
