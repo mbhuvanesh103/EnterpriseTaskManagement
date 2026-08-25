@@ -1,9 +1,9 @@
 namespace EnterpriseTaskManagement.Domain.Common;
 
 /// <summary>
-/// Entity that tracks who created/changed it and when, plus soft-delete state.
-/// Values are set through domain methods only — never by persistence
-/// annotations — so the Domain layer stays framework independent.
+/// Entity that tracks who created/changed it and when, soft-delete state, and a
+/// concurrency token. Values are set through domain methods only — never by
+/// persistence annotations — so the Domain layer stays framework independent.
 /// </summary>
 public abstract class AuditableEntity<TId> : BaseEntity<TId>
     where TId : notnull
@@ -26,6 +26,13 @@ public abstract class AuditableEntity<TId> : BaseEntity<TId>
     public DateTimeOffset? DeletedAtUtc { get; private set; }
 
     public string? DeletedBy { get; private set; }
+
+    /// <summary>
+    /// Optimistic-concurrency token. A plain byte array so the Domain carries no
+    /// framework types; Infrastructure maps it to a SQL Server <c>rowversion</c>
+    /// and the database owns the value.
+    /// </summary>
+    public byte[]? Version { get; private set; }
 
     /// <summary>Stamps creation audit values. Called once, on first persist.</summary>
     public void MarkCreated(DateTimeOffset whenUtc, string? by = null)
