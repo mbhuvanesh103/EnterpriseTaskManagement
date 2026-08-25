@@ -59,42 +59,60 @@ Errors bubble back as `ApiError` (status + field errors from RFC 7807 problem de
 
 ```text
 EnterpriseTaskManagement/
-  EnterpriseTaskManagement.sln
-  Domain/                                    # implemented (this step)
-    EnterpriseTaskManagement.Domain.csproj   # net10.0, zero external dependencies
+  EnterpriseTaskManagement.sln                 # Domain + Application + Infrastructure
+  Domain/                                      # implemented — net10.0, zero external dependencies
     Common/
-      BaseEntity.cs                          # identity-based equality, transient detection
-      AuditableEntity.cs                     # created/modified/deleted audit + soft delete
-      AggregateRoot.cs                       # consistency boundary + domain event collection
-      ValueObject.cs                         # structural equality base
-      IDomainEvent.cs                        # framework-free domain event marker
+      BaseEntity.cs                            # identity-based equality, transient detection
+      AuditableEntity.cs                       # audit + soft delete + byte[] Version concurrency token
+      AggregateRoot.cs                         # consistency boundary + domain event collection
+      ValueObject.cs                           # structural equality base
+      IDomainEvent.cs                          # framework-free domain event marker
     ValueObjects/
-      FullName.cs                            # first + last required, max 100 chars total
-      Email.cs                               # required, validated, lowercased
-      EmployeeCode.cs                        # EMP + exactly 6 digits (EMP000001)
-    Entities/Users/User.cs                   # User aggregate root
-    Events/Users/                             # UserRegistered, UserEmailChanged
-    Exceptions/DomainException.cs            # invariant violation signal
+      FullName.cs                              # first + last required, max 100 chars total
+      Email.cs                                 # required, validated, lowercased
+      EmployeeCode.cs                          # EMP + exactly 6 digits (EMP000001)
+    Entities/Users/User.cs                     # User aggregate root (required DepartmentId)
+    Entities/Departments/Department.cs         # Department aggregate (PublicId, Name, Code, IsActive)
+    Events/Users/                              # UserRegistered, UserEmailChanged
+    Exceptions/DomainException.cs              # invariant violation signal
+  Application/                                 # implemented — depends on Domain only, no EF Core
+    Common/Interfaces/IUserRepository.cs       # persistence contract for the User aggregate
+    Common/Interfaces/IUnitOfWork.cs           # SaveChangesAsync contract
+  Infrastructure/                              # implemented — EF Core 10 + SQL Server
+    EnterpriseTaskManagement.Infrastructure.csproj  # EF Core 10 (SqlServer/Relational/Design) + DI/Config
+    DependencyInjection.cs                     # AddInfrastructure(configuration): DbContext + repositories
+    Persistence/ApplicationDbContext.cs        # DbSet<User>, DbSet<Department>, audit stamping, IUnitOfWork
+    Persistence/Configurations/UserConfiguration.cs
+    Persistence/Configurations/DepartmentConfiguration.cs
+    Persistence/Repositories/UserRepository.cs # IUserRepository over ApplicationDbContext
+    Persistence/Migrations/README.md           # placeholder + dotnet ef commands (no migrations generated)
+  API/                                         # next step (composition root, JWT, Swagger)
 ```
 
-`Application/`, `Infrastructure/` and `API/` projects are added in the following steps
-and are referenced in dependency order: `API → Application → Domain`,
-`Infrastructure → Application/Domain`, with `Domain` depending on nothing.
+Dependency direction is enforced by project references: `Domain` references nothing,
+`Application → Domain`, `Infrastructure → Application + Domain`, and the upcoming
+`API → Application (+ Infrastructure for DI only)`.
+
+> **Environment note:** this workspace has no .NET SDK installed, so the backend was not
+> compiled or migrated here. The code is written as a structurally valid .NET 10 solution —
+> run `dotnet build` and the `dotnet ef` commands from `EnterpriseTaskManagement/` locally.
 
 ### How the Domain pieces connect
 
 - **`BaseEntity<TId>`** gives every entity an identity and identity equality — two `User`
   instances are the same user when their `Id` matches, regardless of field values.
-- **`AuditableEntity<TId>`** extends it with audit + soft-delete state, mutated only via
-  `MarkCreated` / `MarkModified` / `MarkDeleted`. Infrastructure stamps these values in
-  `SaveChanges`; the Domain never references EF Core.
+- **`AuditableEntity<TId>`** extends it with audit state, soft-delete state and the
+  `Version` concurrency token, mutated only via `MarkCreated` / `MarkModified` /
+  `MarkDeleted` / `MarkRestored`. `Version` is a plain `byte[]`, so no EF type leaks in.
 - **`AggregateRoot<TId>`** extends the auditable entity and marks the transactional
   boundary. Repositories load and save aggregate roots only, and roots collect
   `IDomainEvent`s (`DomainEvents`, `ClearDomainEvents`) that Infrastructure drains after commit.
 - **`User : AggregateRoot<long>`** is the entity/aggregate for a person: internal `Id` for
-  persistence, `PublicId` (Guid) for the API surface, and behaviour instead of setters —
-  `Register`, `Rehydrate`, `Rename`, `ChangeEmail`, `AssignToDepartment`,
-  `RemoveFromDepartment`, `Activate`, `Deactivate`.
+  persistence, `PublicId` (Guid) for the API surface, a mandatory `DepartmentId`, and
+  behaviour instead of setters — `Register`, `Rehydrate`, `Rename`, `ChangeEmail`,
+  `TransferToDepartment`, `Activate`, `Deactivate`.
+- **`Department : AggregateRoot<long>`** exists only to satisfy that required relationship;
+  users point at `Department.PublicId`.
 - **Value objects** (`FullName`, `Email`, `EmployeeCode`) derive from `ValueObject`, are
   immutable, compare structurally (`Email.Create("A@X.com") == Email.Create("a@x.com")`), and
   own their own validation/normalization. `User` therefore cannot hold an invalid name,
@@ -103,6 +121,49 @@ and are referenced in dependency order: `API → Application → Domain`,
 - **Validation placement:** format/shape rules live in the value objects, cross-field
   aggregate rules in `User`, and only cross-aggregate rules (e.g. email uniqueness) belong
   to Application handlers with FluentValidation.
+
+### Infrastructure and persistence (Step 4)
+
+| File | Purpose |
+| --- | --- |
+| `Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj` | EF Core 10 packages (`Microsoft.EntityFrameworkCore`, `.Relational`, `.SqlServer`, `.Design`) plus configuration/DI abstractions; project references to Application and Domain. |
+| `Persistence/ApplicationDbContext.cs` | `DbSet<User>` and `DbSet<Department>`, default schema `etm`, `ApplyConfigurationsFromAssembly` for all `IEntityTypeConfiguration<T>`, audit stamping in `SaveChangesAsync`, converts a hard `Remove` into a soft delete, and implements `IUnitOfWork`. |
+| `Persistence/Configurations/UserConfiguration.cs` | Table/keys; `PublicId` stored as a 32-char `"N"` string (`HasMaxLength(32)`, unique); `FullName` mapped as an owned value object (FirstName/MiddleName/LastName/FullName columns); `Email` and `EmployeeCode` mapped through value converters onto their `Create` factories with unique indexes; required FK `DepartmentId → Department.PublicId` (`OnDelete(Restrict)`, `IsRequired`); audit columns; `IsDeleted` + `HasQueryFilter(u => !u.IsDeleted)`; `Version` as `IsRowVersion()`; `DomainEvents` ignored. |
+| `Persistence/Configurations/DepartmentConfiguration.cs` | Same pattern for departments; `PublicId` is an alternate key (32-char) so users can reference it, unique `Code`, audit columns, soft-delete filter, rowversion. |
+| `Persistence/Repositories/UserRepository.cs` | `IUserRepository` implemented with `ApplicationDbContext` (lookups by id/public id/email/employee code, uniqueness checks, list by department, add/update/soft delete). Returns domain objects and `IReadOnlyList<T>` — never `IQueryable`. |
+| `Persistence/Migrations/README.md` | Placeholder for the not-yet-generated migrations plus the exact `dotnet ef` commands. |
+| `DependencyInjection.cs` | `AddInfrastructure(IConfiguration)`: reads `ConnectionStrings:SqlServer` (throws a clear error when absent), registers `AddDbContext<ApplicationDbContext>(UseSqlServer(...))` with migrations assembly/history table and retry-on-failure, then `IUnitOfWork` → `ApplicationDbContext` and `IUserRepository` → `UserRepository`, both scoped. |
+| `Application/Common/Interfaces/IUserRepository.cs`, `IUnitOfWork.cs` | The abstractions Application depends on; Application has no EF Core reference at all. |
+| `Domain/Common/AuditableEntity.cs` (changed) | Added the framework-free `byte[]? Version` concurrency token. |
+| `Domain/Entities/Users/User.cs` (changed) | `DepartmentId` is now a required `Guid`; `AssignToDepartment`/`RemoveFromDepartment` replaced by `TransferToDepartment`. |
+| `Domain/Entities/Departments/Department.cs` (new) | Minimal aggregate backing the required relationship. |
+
+**Wiring, end to end:**
+
+```text
+API startup  →  services.AddInfrastructure(builder.Configuration)
+                  ├─ reads ConnectionStrings:SqlServer (appsettings / user-secrets /
+                  │  ConnectionStrings__SqlServer env var — never hard-coded)
+                  ├─ AddDbContext<ApplicationDbContext>(UseSqlServer(connectionString))
+                  ├─ IUnitOfWork        → ApplicationDbContext
+                  └─ IUserRepository    → UserRepository
+
+Application handler depends on IUserRepository + IUnitOfWork (abstractions only)
+   → UserRepository (Infrastructure) queries ApplicationDbContext.Users
+     → ApplicationDbContext model built from UserConfiguration / DepartmentConfiguration
+       (value-object mapping, soft-delete filter, rowversion, required FK)
+       → EF Core 10 SQL Server provider → SQL Server database
+   → IUnitOfWork.SaveChangesAsync() stamps audit values and commits
+```
+
+Configure the connection string without committing credentials:
+
+```sh
+cd EnterpriseTaskManagement/API
+dotnet user-secrets set "ConnectionStrings:SqlServer" "Server=localhost;Database=EnterpriseTaskManagement;Trusted_Connection=True;TrustServerCertificate=True"
+# or: export ConnectionStrings__SqlServer="..."
+```
+
 
 ### Domain rules enforced
 
