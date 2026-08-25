@@ -195,7 +195,7 @@ real credentials.
 ```jsonc
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=EnterpriseTaskManagement;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true"
+    "SqlServer": "Server=localhost;Database=EnterpriseTaskManagement;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true"
   },
   "Jwt": {
     "Issuer": "EnterpriseTaskManagement.API",
@@ -209,7 +209,7 @@ real credentials.
 
 ```sh
 cd EnterpriseTaskManagement/API
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost;Database=EnterpriseTaskManagement;Trusted_Connection=True;TrustServerCertificate=True"
+dotnet user-secrets set "ConnectionStrings:SqlServer" "Server=localhost;Database=EnterpriseTaskManagement;Trusted_Connection=True;TrustServerCertificate=True"
 dotnet user-secrets set "Jwt:Key" "<a long random secret>"
 ```
 
