@@ -76,6 +76,18 @@ public sealed class User : AggregateRoot<long>
         return user;
     }
 
+    /// <summary>
+    /// Use-case friendly alias of <see cref="Register"/> used by the Application
+    /// layer's CreateUser handler.
+    /// </summary>
+    public static User Create(
+        FullName name,
+        Email email,
+        EmployeeCode employeeCode,
+        Guid departmentId,
+        Guid? publicId = null) =>
+        Register(name, email, employeeCode, departmentId, publicId);
+
     /// <summary>Rehydrates an existing user from persisted state.</summary>
     public static User Rehydrate(
         long id,
@@ -92,6 +104,9 @@ public sealed class User : AggregateRoot<long>
         ArgumentNullException.ThrowIfNull(name);
         Name = name;
     }
+
+    /// <summary>Alias of <see cref="Rename"/> expressing the use-case wording.</summary>
+    public void ChangeName(FullName name) => Rename(name);
 
     public void ChangeEmail(Email email)
     {
@@ -113,9 +128,29 @@ public sealed class User : AggregateRoot<long>
         DepartmentId = departmentId;
     }
 
+    /// <summary>Alias of <see cref="TransferToDepartment"/>.</summary>
+    public void TransferDepartment(Guid departmentId) => TransferToDepartment(departmentId);
+
     public void Activate() => IsActive = true;
 
     public void Deactivate() => IsActive = false;
+
+    /// <summary>
+    /// Soft-deletes the user inside the domain: the audit deletion state is set,
+    /// the user is deactivated and a <see cref="UserDeletedDomainEvent"/> is raised.
+    /// Physical rows are never removed.
+    /// </summary>
+    public void Delete(string? deletedBy = null)
+    {
+        if (IsDeleted)
+        {
+            return;
+        }
+
+        MarkDeleted(DateTimeOffset.UtcNow, deletedBy);
+        IsActive = false;
+        RaiseDomainEvent(new UserDeletedDomainEvent(PublicId, Email.Value, DateTimeOffset.UtcNow));
+    }
 
     private static void EnsureDepartment(Guid departmentId)
     {
