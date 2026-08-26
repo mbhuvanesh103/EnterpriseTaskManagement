@@ -73,11 +73,21 @@ EnterpriseTaskManagement/
       EmployeeCode.cs                          # EMP + exactly 6 digits (EMP000001)
     Entities/Users/User.cs                     # User aggregate root (required DepartmentId)
     Entities/Departments/Department.cs         # Department aggregate (PublicId, Name, Code, IsActive)
-    Events/Users/                              # UserRegistered, UserEmailChanged
+    Events/Users/                              # UserRegistered, UserEmailChanged, UserDeleted
     Exceptions/DomainException.cs              # invariant violation signal
   Application/                                 # implemented — depends on Domain only, no EF Core
-    Common/Interfaces/IUserRepository.cs       # persistence contract for the User aggregate
+    DependencyInjection.cs                     # AddApplication(): MediatR + FluentValidation + pipeline
     Common/Interfaces/IUnitOfWork.cs           # SaveChangesAsync contract
+    Common/Exceptions/NotFoundException.cs     # missing aggregate → HTTP 404 at the API edge
+    Common/Exceptions/ValidationException.cs   # aggregated field errors → HTTP 400
+    Common/Behaviors/ValidationBehavior.cs     # MediatR pipeline: validators run before handlers
+    Common/Models/UserSummary.cs               # shared user read model (DTO)
+    Interfaces/Persistence/IUserRepository.cs  # persistence contract for the User aggregate
+    Features/Users/Commands/CreateUser/        # Command, Handler, Response, Validator
+    Features/Users/Commands/UpdateUser/        # Command, Handler, Response, Validator
+    Features/Users/Commands/DeleteUser/        # Command, Handler, Response, Validator (soft delete)
+    Features/Users/Queries/GetAllUsers/        # Query, Handler, Response
+    Features/Users/Queries/GetUserByPublicId/  # Query, Handler, Response
   Infrastructure/                              # implemented — EF Core 10 + SQL Server
     EnterpriseTaskManagement.Infrastructure.csproj  # EF Core 10 (SqlServer/Relational/Design) + DI/Config
     DependencyInjection.cs                     # AddInfrastructure(configuration): DbContext + repositories
