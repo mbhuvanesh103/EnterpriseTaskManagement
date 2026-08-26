@@ -10,10 +10,18 @@
   </PropertyGroup>
 
   <!--
-    Application depends on Domain only. It must NEVER reference EF Core,
-    ASP.NET Core or any database provider: persistence is reached exclusively
-    through abstractions declared here (e.g. IUserRepository, IUnitOfWork).
+    Use-case layer: CQRS (MediatR) + input validation (FluentValidation) + DI
+    abstractions only. It must NEVER reference EF Core, ASP.NET Core or any
+    database provider: persistence is reached exclusively through abstractions
+    declared here (IUserRepository, IUnitOfWork).
   -->
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="13.0.0" />
+    <PackageReference Include="FluentValidation" Version="12.0.0" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Domain\EnterpriseTaskManagement.Domain.csproj" />
   </ItemGroup>
