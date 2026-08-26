@@ -1,7 +1,7 @@
 using EnterpriseTaskManagement.Domain.Entities.Users;
 using EnterpriseTaskManagement.Domain.ValueObjects;
 
-namespace EnterpriseTaskManagement.Application.Common.Interfaces;
+namespace EnterpriseTaskManagement.Application.Interfaces.Persistence;
 
 /// <summary>
 /// Persistence abstraction for the <see cref="User"/> aggregate. Declared in
@@ -22,12 +22,15 @@ public interface IUserRepository
 
     Task<bool> EmployeeCodeExistsAsync(EmployeeCode employeeCode, CancellationToken cancellationToken = default);
 
+    /// <summary>All users that are not soft-deleted, ordered by employee code.</summary>
+    Task<IReadOnlyList<User>> ListAllAsync(CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<User>> ListByDepartmentAsync(Guid departmentPublicId, CancellationToken cancellationToken = default);
 
     Task AddAsync(User user, CancellationToken cancellationToken = default);
 
     void Update(User user);
 
-    /// <summary>Soft-deletes the aggregate (sets the deletion audit state).</summary>
+    /// <summary>Persists the aggregate's already-applied soft-delete state.</summary>
     void SoftDelete(User user, string? deletedBy = null);
 }

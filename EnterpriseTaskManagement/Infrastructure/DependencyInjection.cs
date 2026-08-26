@@ -1,4 +1,5 @@
 using EnterpriseTaskManagement.Application.Common.Interfaces;
+using EnterpriseTaskManagement.Application.Interfaces.Persistence;
 using EnterpriseTaskManagement.Infrastructure.Persistence;
 using EnterpriseTaskManagement.Infrastructure.Persistence.Repositories;
 

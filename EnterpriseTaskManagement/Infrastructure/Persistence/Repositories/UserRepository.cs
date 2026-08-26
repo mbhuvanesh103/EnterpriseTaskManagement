@@ -1,4 +1,5 @@
 using EnterpriseTaskManagement.Application.Common.Interfaces;
+using EnterpriseTaskManagement.Application.Interfaces.Persistence;
 using EnterpriseTaskManagement.Domain.Entities.Users;
 using EnterpriseTaskManagement.Domain.ValueObjects;
 
@@ -48,6 +49,15 @@ public sealed class UserRepository : IUserRepository
         return _dbContext.Users.AnyAsync(u => u.EmployeeCode == employeeCode, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<User>> ListAllAsync(CancellationToken cancellationToken = default)
+    {
+        var users = await _dbContext.Users
+            .OrderBy(u => u.EmployeeCode)
+            .ToListAsync(cancellationToken);
+
+        return users;
+    }
+
     public async Task<IReadOnlyList<User>> ListByDepartmentAsync(
         Guid departmentPublicId,
         CancellationToken cancellationToken = default)
@@ -75,7 +85,13 @@ public sealed class UserRepository : IUserRepository
     public void SoftDelete(User user, string? deletedBy = null)
     {
         ArgumentNullException.ThrowIfNull(user);
-        user.MarkDeleted(DateTimeOffset.UtcNow, deletedBy);
+        // The aggregate normally soft-deletes itself (User.Delete raises the
+        // domain event); this keeps the operation idempotent for other callers.
+        if (!user.IsDeleted)
+        {
+            user.MarkDeleted(DateTimeOffset.UtcNow, deletedBy);
+        }
+
         _dbContext.Users.Update(user);
     }
 }
