@@ -229,3 +229,100 @@ dotnet user-secrets set "Jwt:Key" "<a long random secret>"
 cd EnterpriseTaskManagement
 dotnet build
 ```
+
+---
+
+## Application layer (Step 5) — use cases only
+
+Every file created or changed in this step:
+
+| File | Purpose |
+| --- | --- |
+| `Application/EnterpriseTaskManagement.Application.csproj` (changed) | Added `MediatR`, `FluentValidation`, `FluentValidation.DependencyInjectionExtensions`, `Microsoft.Extensions.DependencyInjection.Abstractions`. Still references **Domain only** — no EF Core, no ASP.NET Core, no provider. |
+| `Application/DependencyInjection.cs` (new) | `AddApplication()`: registers MediatR handlers from this assembly, all FluentValidation validators, and `ValidationBehavior<,>` as an open pipeline behavior. |
+| `Application/Common/Exceptions/NotFoundException.cs` (new) | Robust not-found signal with `EntityName`/`Key` and the `NotFoundException.For("User", publicId, "public id")` factory. API maps it to 404. |
+| `Application/Common/Exceptions/ValidationException.cs` (new) | Groups FluentValidation failures into `IDictionary<string, string[]> Errors` for RFC 7807 problem details. |
+| `Application/Common/Behaviors/ValidationBehavior.cs` (new) | Runs validators before the handler; throws `ValidationException` on failure. |
+| `Application/Common/Models/UserSummary.cs` (new) | Shared query DTO (`PublicId`, `FullName`, `Email`, `EmployeeCode`, `IsActive`) with `FromUser(User)` projection, so value objects never leave the layer. |
+| `Application/Interfaces/Persistence/IUserRepository.cs` (moved from `Common/Interfaces/`) | Repository abstraction; namespace is now `EnterpriseTaskManagement.Application.Interfaces.Persistence`. Added `ListAllAsync`. Returns domain objects / `IReadOnlyList<T>` — never `IQueryable`. |
+| `Application/Common/Interfaces/IUnitOfWork.cs` (unchanged) | `SaveChangesAsync` contract implemented by `ApplicationDbContext`. |
+| `Features/Users/Commands/CreateUser/{CreateUserCommand,CreateUserCommandHandler,CreateUserResponse,CreateUserValidator}.cs` | Inputs `firstName,lastName,email,employeeCode,departmentId`; handler builds `FullName` → `Email` → `EmployeeCode`, checks email / employee-code uniqueness via the repository's real `EmailExistsAsync` / `EmployeeCodeExistsAsync`, calls `User.Create`, `AddAsync`, `SaveChangesAsync`. |
+| `Features/Users/Commands/UpdateUser/{UpdateUserCommand,UpdateUserCommandHandler,UpdateUserResponse,UpdateUserValidator}.cs` | Inputs `publicId,firstName,lastName,email,departmentId`; loads by `PublicId` or throws `NotFoundException`, builds value objects, calls `ChangeName()`, `ChangeEmail()`, `TransferDepartment()`, then `Update` + `SaveChangesAsync`. |
+| `Features/Users/Commands/DeleteUser/{DeleteUserCommand,DeleteUserCommandHandler,DeleteUserResponse,DeleteUserValidator}.cs` | Input `publicId`; loads or throws `NotFoundException`, calls the new domain method `User.Delete()` (audit soft-delete state + deactivate + `UserDeletedDomainEvent`), then persists. No physical delete. |
+| `Features/Users/Queries/GetAllUsers/{GetAllUsersQuery,GetAllUsersQueryHandler,GetAllUsersResponse}.cs` | Returns `UserSummary` list + count; optional department filter. Soft-deleted users are excluded by the EF query filter. |
+| `Features/Users/Queries/GetUserByPublicId/{GetUserByPublicIdQuery,GetUserByPublicIdQueryHandler,GetUserByPublicIdResponse}.cs` | Returns `PublicId`, `FullName`, `Email`, `EmployeeCode`, `IsActive`; throws `NotFoundException` when missing. |
+| `Domain/Entities/Users/User.cs` (changed) | Added use-case-named behaviour: `Create` (alias of `Register`), `ChangeName` (alias of `Rename`), `TransferDepartment` (alias of `TransferToDepartment`) and `Delete(deletedBy?)` which soft-deletes, deactivates and raises the deleted event. Still framework-free. |
+| `Domain/Events/Users/UserDeletedDomainEvent.cs` (new) | `UserDeletedDomainEvent(UserPublicId, Email, OccurredOnUtc)`. |
+| `Infrastructure/Persistence/Repositories/UserRepository.cs` (changed) | Implements the relocated `IUserRepository`, adds `ListAllAsync`, and `SoftDelete` is now idempotent (the aggregate already marked itself deleted). |
+| `Infrastructure/DependencyInjection.cs` (changed) | Uses the new interface namespace; registration unchanged (`IUserRepository → UserRepository`, `IUnitOfWork → ApplicationDbContext`). |
+| `EnterpriseTaskManagement.sln` (added) | Solution containing Domain, Application and Infrastructure. |
+
+### Validation split
+
+Validators check **input shape only**: required strings and a supplied department.
+`DepartmentId` is a `Guid` in the Domain (users reference `Department.PublicId`), so the
+requested "department > 0" rule is expressed as `NotEmpty()` — a non-empty identifier.
+Email syntax, the 100-char full-name limit and the `EMP######` pattern are **not**
+duplicated: they live in `Email`, `FullName` and `EmployeeCode` and throw `DomainException`.
+
+### Create User — end to end
+
+```text
+POST /api/users            (API controller — intended, not implemented yet)
+  → new CreateUserCommand(firstName, lastName, email, employeeCode, departmentId)
+  → ISender.Send(command)                              MediatR
+    → ValidationBehavior → CreateUserValidator          required fields present?
+    → CreateUserCommandHandler
+        FullName.Create / Email.Create / EmployeeCode.Create   Domain validation + normalization
+        IUserRepository.EmailExistsAsync / EmployeeCodeExistsAsync   uniqueness policy
+        User.Create(...)                                aggregate + UserRegisteredDomainEvent
+        IUserRepository.AddAsync(user)
+        IUnitOfWork.SaveChangesAsync()
+      → UserRepository (Infrastructure) → ApplicationDbContext.Users.Add
+        → UserConfiguration mapping (owned FullName, Email/EmployeeCode converters,
+          PublicId "N" string, audit columns, rowversion)
+          → EF Core 10 SQL Server provider → INSERT etm.Users
+  → CreateUserResponse (PublicId, FullName, Email, EmployeeCode, DepartmentId, IsActive)
+    → 201 Created
+```
+
+### Update User — end to end
+
+```text
+PUT /api/users/{publicId}  (API controller — intended, not implemented yet)
+  → new UpdateUserCommand(publicId, firstName, lastName, email, departmentId)
+  → ISender.Send(command)
+    → ValidationBehavior → UpdateUserValidator
+    → UpdateUserCommandHandler
+        IUserRepository.GetByPublicIdAsync(publicId)
+          null → NotFoundException  → 404 problem details
+        FullName.Create / Email.Create                   Domain rules
+        email changed & already taken → DomainException  → 400/422
+        user.ChangeName() / ChangeEmail() (raises UserEmailChangedDomainEvent) /
+        TransferDepartment()                             invariants stay in the aggregate
+        IUserRepository.Update(user) + IUnitOfWork.SaveChangesAsync()
+      → ApplicationDbContext stamps ModifiedAtUtc/ModifiedBy, checks the rowversion
+        → UPDATE etm.Users WHERE PublicId = ... AND Version = ...
+  → UpdateUserResponse → 200 OK
+```
+
+Handlers depend on `IUserRepository` and `IUnitOfWork` only — the Application project
+cannot even see `ApplicationDbContext`.
+
+### Build status
+
+This workspace has **no .NET SDK installed** (`dotnet` is unavailable), so `dotnet build`
+was not run here. The Application layer is written as structurally valid .NET 10 C#;
+compile it locally with:
+
+```sh
+cd EnterpriseTaskManagement
+dotnet build
+```
+
+API composition root wiring, once the API project exists:
+
+```csharp
+builder.Services.AddApplication();                     // MediatR + FluentValidation
+builder.Services.AddInfrastructure(builder.Configuration);  // EF Core 10 + SQL Server
+```
