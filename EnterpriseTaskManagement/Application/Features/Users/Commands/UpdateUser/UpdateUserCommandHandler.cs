@@ -2,7 +2,6 @@ using EnterpriseTaskManagement.Application.Common.Exceptions;
 using EnterpriseTaskManagement.Application.Common.Interfaces;
 using EnterpriseTaskManagement.Application.Interfaces.Persistence;
 using EnterpriseTaskManagement.Domain.Entities.Users;
-using EnterpriseTaskManagement.Domain.Exceptions;
 using EnterpriseTaskManagement.Domain.ValueObjects;
 
 using MediatR;
@@ -36,7 +35,7 @@ public sealed class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand
 
         if (email != user.Email && await _users.EmailExistsAsync(email, cancellationToken))
         {
-            throw new DomainException($"A user with email '{email.Value}' already exists.");
+            throw ConflictException.Duplicate(nameof(User), "email", email.Value);
         }
 
         user.ChangeName(name);
