@@ -59,7 +59,7 @@ Errors bubble back as `ApiError` (status + field errors from RFC 7807 problem de
 
 ```text
 EnterpriseTaskManagement/
-  EnterpriseTaskManagement.sln                 # Domain + Application + Infrastructure
+  EnterpriseTaskManagement.sln                 # Domain + Application + Infrastructure + API
   Domain/                                      # implemented — net10.0, zero external dependencies
     Common/
       BaseEntity.cs                            # identity-based equality, transient detection
@@ -80,6 +80,8 @@ EnterpriseTaskManagement/
     Common/Interfaces/IUnitOfWork.cs           # SaveChangesAsync contract
     Common/Exceptions/NotFoundException.cs     # missing aggregate → HTTP 404 at the API edge
     Common/Exceptions/ValidationException.cs   # aggregated field errors → HTTP 400
+    Common/Exceptions/ConflictException.cs     # duplicate email / employee code → HTTP 409
+
     Common/Behaviors/ValidationBehavior.cs     # MediatR pipeline: validators run before handlers
     Common/Models/UserSummary.cs               # shared user read model (DTO)
     Interfaces/Persistence/IUserRepository.cs  # persistence contract for the User aggregate
@@ -96,12 +98,22 @@ EnterpriseTaskManagement/
     Persistence/Configurations/DepartmentConfiguration.cs
     Persistence/Repositories/UserRepository.cs # IUserRepository over ApplicationDbContext
     Persistence/Migrations/README.md           # placeholder + dotnet ef commands (no migrations generated)
-  API/                                         # next step (composition root, JWT, Swagger)
+  API/                                         # implemented — controllers + Swagger (no JWT yet)
+    EnterpriseTaskManagement.API.csproj        # Microsoft.NET.Sdk.Web + Swashbuckle, XML docs on
+    Program.cs                                 # composition root + middleware order
+    Controllers/UsersController.cs             # 5 endpoints, depends only on MediatR ISender
+    Contracts/Users/UpdateUserRequest.cs       # PUT body without PublicId (route is the only source)
+    Middleware/GlobalExceptionHandler.cs       # IExceptionHandler → RFC 7807 ProblemDetails
+    appsettings.json                           # empty ConnectionStrings:SqlServer placeholder
+    appsettings.Development.json               # local overrides (no credentials committed)
+    Properties/launchSettings.json             # Development profiles, launches /swagger
 ```
 
 Dependency direction is enforced by project references: `Domain` references nothing,
-`Application → Domain`, `Infrastructure → Application + Domain`, and the upcoming
-`API → Application (+ Infrastructure for DI only)`.
+`Application → Domain`, `Infrastructure → Application + Domain`, and
+`API → Application + Infrastructure` (for DI registration only — the API has no EF Core
+package reference and never touches `ApplicationDbContext`).
+
 
 > **Environment note:** this workspace has no .NET SDK installed, so the backend was not
 > compiled or migrated here. The code is written as a structurally valid .NET 10 solution —
