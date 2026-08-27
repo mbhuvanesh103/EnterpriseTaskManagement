@@ -1,7 +1,7 @@
+using EnterpriseTaskManagement.Application.Common.Exceptions;
 using EnterpriseTaskManagement.Application.Common.Interfaces;
 using EnterpriseTaskManagement.Application.Interfaces.Persistence;
 using EnterpriseTaskManagement.Domain.Entities.Users;
-using EnterpriseTaskManagement.Domain.Exceptions;
 using EnterpriseTaskManagement.Domain.ValueObjects;
 
 using MediatR;
@@ -36,12 +36,12 @@ public sealed class CreateUserCommandHandler : IRequestHandler<CreateUserCommand
         // abstraction exposes exactly these checks, so this is real behaviour.
         if (await _users.EmailExistsAsync(email, cancellationToken))
         {
-            throw new DomainException($"A user with email '{email.Value}' already exists.");
+            throw ConflictException.Duplicate(nameof(User), "email", email.Value);
         }
 
         if (await _users.EmployeeCodeExistsAsync(employeeCode, cancellationToken))
         {
-            throw new DomainException($"A user with employee code '{employeeCode.Value}' already exists.");
+            throw ConflictException.Duplicate(nameof(User), "employee code", employeeCode.Value);
         }
 
         var user = User.Create(name, email, employeeCode, request.DepartmentId);

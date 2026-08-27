@@ -59,7 +59,7 @@ Errors bubble back as `ApiError` (status + field errors from RFC 7807 problem de
 
 ```text
 EnterpriseTaskManagement/
-  EnterpriseTaskManagement.sln                 # Domain + Application + Infrastructure
+  EnterpriseTaskManagement.sln                 # Domain + Application + Infrastructure + API
   Domain/                                      # implemented — net10.0, zero external dependencies
     Common/
       BaseEntity.cs                            # identity-based equality, transient detection
@@ -80,6 +80,8 @@ EnterpriseTaskManagement/
     Common/Interfaces/IUnitOfWork.cs           # SaveChangesAsync contract
     Common/Exceptions/NotFoundException.cs     # missing aggregate → HTTP 404 at the API edge
     Common/Exceptions/ValidationException.cs   # aggregated field errors → HTTP 400
+    Common/Exceptions/ConflictException.cs     # duplicate email / employee code → HTTP 409
+
     Common/Behaviors/ValidationBehavior.cs     # MediatR pipeline: validators run before handlers
     Common/Models/UserSummary.cs               # shared user read model (DTO)
     Interfaces/Persistence/IUserRepository.cs  # persistence contract for the User aggregate
@@ -96,12 +98,22 @@ EnterpriseTaskManagement/
     Persistence/Configurations/DepartmentConfiguration.cs
     Persistence/Repositories/UserRepository.cs # IUserRepository over ApplicationDbContext
     Persistence/Migrations/README.md           # placeholder + dotnet ef commands (no migrations generated)
-  API/                                         # next step (composition root, JWT, Swagger)
+  API/                                         # implemented — controllers + Swagger (no JWT yet)
+    EnterpriseTaskManagement.API.csproj        # Microsoft.NET.Sdk.Web + Swashbuckle, XML docs on
+    Program.cs                                 # composition root + middleware order
+    Controllers/UsersController.cs             # 5 endpoints, depends only on MediatR ISender
+    Contracts/Users/UpdateUserRequest.cs       # PUT body without PublicId (route is the only source)
+    Middleware/GlobalExceptionHandler.cs       # IExceptionHandler → RFC 7807 ProblemDetails
+    appsettings.json                           # empty ConnectionStrings:SqlServer placeholder
+    appsettings.Development.json               # local overrides (no credentials committed)
+    Properties/launchSettings.json             # Development profiles, launches /swagger
 ```
 
 Dependency direction is enforced by project references: `Domain` references nothing,
-`Application → Domain`, `Infrastructure → Application + Domain`, and the upcoming
-`API → Application (+ Infrastructure for DI only)`.
+`Application → Domain`, `Infrastructure → Application + Domain`, and
+`API → Application + Infrastructure` (for DI registration only — the API has no EF Core
+package reference and never touches `ApplicationDbContext`).
+
 
 > **Environment note:** this workspace has no .NET SDK installed, so the backend was not
 > compiled or migrated here. The code is written as a structurally valid .NET 10 solution —
@@ -326,3 +338,93 @@ API composition root wiring, once the API project exists:
 builder.Services.AddApplication();                     // MediatR + FluentValidation
 builder.Services.AddInfrastructure(builder.Configuration);  // EF Core 10 + SQL Server
 ```
+
+---
+
+## API layer (Step 6) — controllers + Swagger
+
+| File | Purpose |
+| --- | --- |
+| `API/EnterpriseTaskManagement.API.csproj` | ASP.NET Core Web API (`net10.0`), `Swashbuckle.AspNetCore`, XML doc generation for Swagger summaries. References Application + Infrastructure only. |
+| `API/Program.cs` | Composition root: `AddControllers()`, `AddApplication()`, `AddInfrastructure(configuration)`, `AddProblemDetails()` + `AddExceptionHandler<GlobalExceptionHandler>()`, `AddEndpointsApiExplorer()` + `AddSwaggerGen()` (configured exactly once). Middleware order: `UseExceptionHandler()` → Swagger (Development only) → `UseHttpsRedirection()` → `MapControllers()`. |
+| `API/Controllers/UsersController.cs` | The five User endpoints. Injects only `ISender`; no DbContext, repository, EF Core type, validation or business logic. |
+| `API/Contracts/Users/UpdateUserRequest.cs` | PUT body that deliberately has **no** `PublicId`, so the identity can only come from the route — a mismatched body id is impossible instead of merely rejected. |
+| `API/Middleware/GlobalExceptionHandler.cs` | `IExceptionHandler` that converts exceptions into RFC 7807 `ProblemDetails`. |
+| `API/appsettings*.json` | `ConnectionStrings:SqlServer` placeholder (empty — set it via user secrets or `ConnectionStrings__SqlServer`). No credentials, no JWT values committed. |
+| `API/Properties/launchSettings.json` | Development profiles with `ASPNETCORE_ENVIRONMENT=Development` and `launchUrl: swagger`. |
+| `Application/Common/Exceptions/ConflictException.cs` | New: duplicate email / employee code detected by the existing Create/Update handlers, mapped to 409. Previously these threw `DomainException` (400), which conflated "conflict" with "invalid input". |
+
+### Endpoints
+
+| Method & route | MediatR message | Success | Errors |
+| --- | --- | --- | --- |
+| `POST /api/Users` | `CreateUserCommand` | `201 Created` + `Location` via `CreatedAtAction(nameof(GetByPublicId))` | 400 validation/invariant, 409 duplicate email or employee code |
+| `GET /api/Users?departmentId=` | `GetAllUsersQuery` | `200 OK` (`GetAllUsersResponse`) | — |
+| `GET /api/Users/{publicId}` | `GetUserByPublicIdQuery` | `200 OK` | 404 from the global handler |
+| `PUT /api/Users/{publicId}` | `UpdateUserCommand` (publicId from route) | `200 OK` | 400, 404, 409 |
+| `DELETE /api/Users/{publicId}` | `DeleteUserCommand` (soft delete only) | `204 No Content` | 400, 404 |
+
+`DELETE` never removes a row: the handler calls `User.Delete()` (audit deletion state +
+deactivation + `UserDeletedDomainEvent`) and `IUserRepository.SoftDelete`, and the
+`IsDeleted` query filter hides the row from later reads.
+
+### Exception → status mapping
+
+| Exception | Status | Title |
+| --- | --- | --- |
+| `Application.Common.Exceptions.NotFoundException` | 404 | Resource not found |
+| `Application.Common.Exceptions.ConflictException` | 409 | Conflict |
+| `Application.Common.Exceptions.ValidationException` | 400 | Validation failed (+ `errors` per field) |
+| `FluentValidation.ValidationException` | 400 | Validation failed (+ `errors` per field) |
+| `Domain.Exceptions.DomainException` | 400 | Business rule violation |
+| `ArgumentException` (incl. `ArgumentNullException`) | 400 | Invalid argument |
+| anything else | 500 | Internal server error (generic detail) |
+
+Every response body is `{ type, title, status, detail, instance, traceId }`. A separate
+`BusinessRuleException` was **not** added: `DomainException` already is the domain's
+"business rule broken" signal and the validation pipeline already produces field errors, so
+a third type would be unused ceremony. Unhandled exceptions log server-side and return a
+fixed generic `detail` — no stack traces, connection strings, passwords or token values
+ever reach the client.
+
+### Controller → MediatR → SQL Server
+
+```text
+HTTP request (Axios from the frontend, or Swagger UI)
+  → UsersController action (ISender only)
+    → MediatR pipeline
+      → ValidationBehavior (FluentValidation: input shape) → ValidationException → 400
+      → Command/Query handler
+        → Domain value objects + aggregate methods → DomainException → 400
+        → duplicate checks via IUserRepository        → ConflictException → 409
+        → missing aggregate                           → NotFoundException → 404
+        → IUserRepository (Infrastructure) → ApplicationDbContext + entity configurations
+          → IUnitOfWork.SaveChangesAsync() → EF Core 10 → SQL Server (schema `etm`)
+    ← Response DTO → 200 / 201 / 204, or ProblemDetails from GlobalExceptionHandler
+```
+
+### Swagger discovery
+
+```sh
+cd EnterpriseTaskManagement/API
+dotnet user-secrets set "ConnectionStrings:SqlServer" "Server=localhost;Database=EnterpriseTaskManagement;Trusted_Connection=True;TrustServerCertificate=True"
+dotnet run
+# → https://localhost:7183/swagger  (Development only; UI lists all five User endpoints)
+```
+
+Swagger is registered once (`AddSwaggerGen`) and exposed only when
+`app.Environment.IsDevelopment()`, at `RoutePrefix = "swagger"` reading
+`/swagger/v1/swagger.json`. `GenerateDocumentationFile` plus
+`IncludeXmlComments(..., includeControllerXmlComments: true)` surface the action summaries
+and `ProducesResponseType` declarations (including 409 where the flow really produces it).
+
+### Step 6 build status
+
+This workspace has **no .NET SDK** (`dotnet` is not installed), so `dotnet build` could not
+be run and the API could not be started — the Swagger UI smoke test is impossible here.
+The projects, package references, DI registrations, middleware order and Development
+Swagger configuration were reviewed by hand so that `/swagger` serves all five endpoints
+once you run `dotnet build` / `dotnet run` locally.
+
+No JWT/authentication, no React changes, and no Projects or Tasks features were added in
+this step.
