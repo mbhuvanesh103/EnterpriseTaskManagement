@@ -7,6 +7,7 @@ using EnterpriseTaskManagement.Application.Features.Users.Queries.GetUserByPubli
 
 using MediatR;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -47,9 +48,13 @@ public sealed class UsersController : ControllerBase
     }
 
     /// <summary>Lists every user that is not soft-deleted, optionally filtered by department.</summary>
+    /// <remarks>Requires a valid bearer token. No role restriction is applied.</remarks>
     /// <response code="200">The user collection (possibly empty).</response>
+    /// <response code="401">Missing, expired or invalid bearer token.</response>
     [HttpGet]
+    [Authorize]
     [ProducesResponseType(typeof(GetAllUsersResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<GetAllUsersResponse>> GetAll(
         [FromQuery] Guid? departmentId,
         CancellationToken cancellationToken) =>
