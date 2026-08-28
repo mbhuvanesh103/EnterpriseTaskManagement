@@ -1,11 +1,14 @@
 using EnterpriseTaskManagement.Application.Common.Interfaces;
+using EnterpriseTaskManagement.Application.Interfaces.Authentication;
 using EnterpriseTaskManagement.Application.Interfaces.Persistence;
+using EnterpriseTaskManagement.Infrastructure.Authentication;
 using EnterpriseTaskManagement.Infrastructure.Persistence;
 using EnterpriseTaskManagement.Infrastructure.Persistence.Repositories;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace EnterpriseTaskManagement.Infrastructure;
 
