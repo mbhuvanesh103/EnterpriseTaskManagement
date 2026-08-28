@@ -125,8 +125,9 @@ public sealed class User : AggregateRoot<long>
         Email email,
         EmployeeCode employeeCode,
         Guid departmentId,
-        bool isActive) =>
-        new(id, publicId, name, email, employeeCode, departmentId, isActive);
+        bool isActive,
+        string? passwordHash = null) =>
+        new(id, publicId, name, email, employeeCode, departmentId, isActive, passwordHash);
 
     public void Rename(FullName name)
     {
