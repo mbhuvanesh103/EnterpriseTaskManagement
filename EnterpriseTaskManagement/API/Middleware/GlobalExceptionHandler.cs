@@ -74,6 +74,12 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
         NotFoundException notFound => Problem(
             StatusCodes.Status404NotFound, "Resource not found", notFound.Message),
 
+        // Authentication failures are always the same generic 401: no hint about
+        // whether the account exists, is inactive, or the password was wrong.
+        AuthenticationFailedException => Problem(
+            StatusCodes.Status401Unauthorized, "Authentication failed",
+            AuthenticationFailedException.GenericMessage),
+
         ConflictException conflict => Problem(
             StatusCodes.Status409Conflict, "Conflict", conflict.Message),
 
