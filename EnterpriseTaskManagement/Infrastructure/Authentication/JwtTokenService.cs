@@ -55,15 +55,18 @@ public sealed class JwtTokenService : IJwtTokenService
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
         };
 
-        var token = new JwtSecurityToken(
-            issuer: _settings.Issuer,
-            audience: _settings.Audience,
-            claims: claims,
-            notBefore: issuedAt.UtcDateTime,
-            expires: expiresAt.UtcDateTime,
-            signingCredentials: _credentials);
+        var descriptor = new SecurityTokenDescriptor
+        {
+            Issuer = _settings.Issuer,
+            Audience = _settings.Audience,
+            Subject = new ClaimsIdentity(claims),
+            NotBefore = issuedAt.UtcDateTime,
+            Expires = expiresAt.UtcDateTime,
+            IssuedAt = issuedAt.UtcDateTime,
+            SigningCredentials = _credentials,
+        };
 
-        string value = new JwtSecurityTokenHandler().WriteToken(token);
+        string value = new JsonWebTokenHandler().CreateToken(descriptor);
 
         return new AccessToken(value, expiresAt);
     }
