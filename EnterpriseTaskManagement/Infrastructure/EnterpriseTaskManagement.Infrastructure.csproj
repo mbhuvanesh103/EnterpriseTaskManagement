@@ -21,6 +21,9 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.0" />
+    <!-- JWT signing/serialization only. Token *validation* lives in the API. -->
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.*" />
   </ItemGroup>
 
   <!-- Dependency direction: Domain <- Application <- Infrastructure. -->
