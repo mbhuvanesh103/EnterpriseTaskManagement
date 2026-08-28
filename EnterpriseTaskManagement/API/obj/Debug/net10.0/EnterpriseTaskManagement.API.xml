@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>EnterpriseTaskManagement.API</name>
+    </assembly>
+    <members>
+        <member name="T:EnterpriseTaskManagement.API.Contracts.Users.UpdateUserRequest">
+            <summary>
+            Request body for <c>PUT /api/Users/{publicId}</c>. It deliberately omits
+            <c>PublicId</c>: the identity of the resource can only come from the route,
+            so a mismatched or spoofed body identifier is impossible by construction.
+            </summary>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Contracts.Users.UpdateUserRequest.#ctor(System.String,System.String,System.String,System.Guid)">
+            <summary>
+            Request body for <c>PUT /api/Users/{publicId}</c>. It deliberately omits
+            <c>PublicId</c>: the identity of the resource can only come from the route,
+            so a mismatched or spoofed body identifier is impossible by construction.
+            </summary>
+        </member>
+        <member name="T:EnterpriseTaskManagement.API.Controllers.AuthController">
+            <summary>
+            Authentication surface. Thin transport adapter: it depends only on
+            <see cref="T:MediatR.ISender"/> and contains no credential, hashing or token logic.
+            </summary>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.AuthController.Login(EnterpriseTaskManagement.Application.Features.Auth.Commands.Login.LoginCommand,System.Threading.CancellationToken)">
+            <summary>Exchanges email and password for a signed JWT access token.</summary>
+            <response code="200">Authentication succeeded; the access token is returned.</response>
+            <response code="400">The submitted input shape was rejected.</response>
+            <response code="401">Authentication failed. The reason is deliberately generic.</response>
+        </member>
+        <member name="T:EnterpriseTaskManagement.API.Controllers.UsersController">
+            <summary>
+            HTTP surface of the User aggregate. The controller is a thin transport
+            adapter: it depends only on <see cref="T:MediatR.ISender"/> (MediatR), holds no
+            business logic, no validation logic and no persistence types.
+            </summary>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.UsersController.Create(EnterpriseTaskManagement.Application.Features.Users.Commands.CreateUser.CreateUserCommand,System.Threading.CancellationToken)">
+            <summary>Registers a new user.</summary>
+            <response code="201">User created; the Location header points at the new resource.</response>
+            <response code="400">Input shape or domain invariant rejected the request.</response>
+            <response code="409">Email or employee code already belongs to another user.</response>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.UsersController.GetAll(System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <summary>Lists every user that is not soft-deleted, optionally filtered by department.</summary>
+            <remarks>Requires a valid bearer token. No role restriction is applied.</remarks>
+            <response code="200">The user collection (possibly empty).</response>
+            <response code="401">Missing, expired or invalid bearer token.</response>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.UsersController.GetByPublicId(System.Guid,System.Threading.CancellationToken)">
+            <summary>Reads a single user by its externally shareable identifier.</summary>
+            <response code="200">The requested user.</response>
+            <response code="404">No such user, or the user is soft-deleted.</response>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.UsersController.Update(System.Guid,EnterpriseTaskManagement.API.Contracts.Users.UpdateUserRequest,System.Threading.CancellationToken)">
+            <summary>Updates a user's name, email and department.</summary>
+            <remarks>The identity is taken from the route only; the body carries no identifier.</remarks>
+            <response code="200">The updated user.</response>
+            <response code="400">Input shape or domain invariant rejected the request.</response>
+            <response code="404">No such user, or the user is soft-deleted.</response>
+            <response code="409">The new email already belongs to another user.</response>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.UsersController.Delete(System.Guid,System.Threading.CancellationToken)">
+            <summary>Soft-deletes a user. The row is never physically removed.</summary>
+            <response code="204">The user is now marked deleted and deactivated.</response>
+            <response code="400">The supplied identifier was rejected.</response>
+            <response code="404">No such user, or the user is already soft-deleted.</response>
+        </member>
+        <member name="T:EnterpriseTaskManagement.API.Middleware.GlobalExceptionHandler">
+             <summary>
+             Single place where exceptions become HTTP responses (.NET
+             <see cref="T:Microsoft.AspNetCore.Diagnostics.IExceptionHandler"/>, wired through <c>UseExceptionHandler</c>).
+             Every response is RFC 7807 <see cref="T:Microsoft.AspNetCore.Mvc.ProblemDetails"/> JSON with
+             <c>type</c>, <c>title</c>, <c>status</c> and <c>detail</c>.
+            
+             Mapping:
+               NotFoundException                       -> 404
+               ConflictException (duplicate email/code) -> 409
+               FluentValidation.ValidationException     -> 400 (+ per-field errors)
+               Application ValidationException          -> 400 (+ per-field errors)
+               DomainException (broken business rule)   -> 400
+               ArgumentException                        -> 400
+               anything else                            -> 500 with a generic detail
+            
+             Only messages authored by our own Domain/Application layers are echoed.
+             Unhandled exceptions never expose their message, stack trace, connection
+             string, credentials or token values — those are logged server-side only.
+             </summary>
+        </member>
+        <member name="T:Program">
+            <summary>
+            Auto-generated public partial Program class for top-level statement apps.
+            </summary>
+        </member>
+    </members>
+</doc>

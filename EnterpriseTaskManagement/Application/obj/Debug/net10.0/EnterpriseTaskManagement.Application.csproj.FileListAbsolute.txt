@@ -3,3 +3,13 @@
 /dev-server/EnterpriseTaskManagement/Application/obj/Debug/net10.0/EnterpriseTaskManagement.Application.AssemblyInfoInputs.cache
 /dev-server/EnterpriseTaskManagement/Application/obj/Debug/net10.0/EnterpriseTaskManagement.Application.AssemblyInfo.cs
 /dev-server/EnterpriseTaskManagement/Application/obj/Debug/net10.0/EnterpriseTaskManagement.Application.csproj.CoreCompileInputs.cache
+/dev-server/EnterpriseTaskManagement/Application/bin/Debug/net10.0/EnterpriseTaskManagement.Application.deps.json
+/dev-server/EnterpriseTaskManagement/Application/bin/Debug/net10.0/EnterpriseTaskManagement.Application.dll
+/dev-server/EnterpriseTaskManagement/Application/bin/Debug/net10.0/EnterpriseTaskManagement.Application.pdb
+/dev-server/EnterpriseTaskManagement/Application/bin/Debug/net10.0/EnterpriseTaskManagement.Domain.dll
+/dev-server/EnterpriseTaskManagement/Application/bin/Debug/net10.0/EnterpriseTaskManagement.Domain.pdb
+/dev-server/EnterpriseTaskManagement/Application/obj/Debug/net10.0/Enterpri.4D1B125F.Up2Date
+/dev-server/EnterpriseTaskManagement/Application/obj/Debug/net10.0/EnterpriseTaskManagement.Application.dll
+/dev-server/EnterpriseTaskManagement/Application/obj/Debug/net10.0/refint/EnterpriseTaskManagement.Application.dll
+/dev-server/EnterpriseTaskManagement/Application/obj/Debug/net10.0/EnterpriseTaskManagement.Application.pdb
+/dev-server/EnterpriseTaskManagement/Application/obj/Debug/net10.0/ref/EnterpriseTaskManagement.Application.dll
