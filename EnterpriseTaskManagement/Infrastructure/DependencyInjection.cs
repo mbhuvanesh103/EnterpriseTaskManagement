@@ -1,11 +1,14 @@
 using EnterpriseTaskManagement.Application.Common.Interfaces;
+using EnterpriseTaskManagement.Application.Interfaces.Authentication;
 using EnterpriseTaskManagement.Application.Interfaces.Persistence;
+using EnterpriseTaskManagement.Infrastructure.Authentication;
 using EnterpriseTaskManagement.Infrastructure.Persistence;
 using EnterpriseTaskManagement.Infrastructure.Persistence.Repositories;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace EnterpriseTaskManagement.Infrastructure;
 
@@ -49,6 +52,17 @@ public static class DependencyInjection
 
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IUserRepository, UserRepository>();
+
+        // Authentication services behind their Application-layer abstractions.
+        // Jwt:SecretKey comes from User Secrets / the Jwt__SecretKey environment
+        // variable — the repository holds no usable key.
+        services.AddOptions<JwtSettings>()
+            .Bind(configuration.GetSection(JwtSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
         return services;
     }

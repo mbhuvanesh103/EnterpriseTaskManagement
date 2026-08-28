@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/API/">
+    <Project Path="API/EnterpriseTaskManagement.API.csproj" />
+  </Folder>
+  <Folder Name="/Application/">
+    <Project Path="Application/EnterpriseTaskManagement.Application.csproj" />
+  </Folder>
+  <Folder Name="/Domain/">
+    <Project Path="Domain/EnterpriseTaskManagement.Domain.csproj" />
+  </Folder>
+  <Folder Name="/Infrastructure/">
+    <Project Path="Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj" />
+  </Folder>
+</Solution>

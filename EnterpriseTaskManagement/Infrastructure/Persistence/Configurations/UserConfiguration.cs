@@ -79,6 +79,15 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.IsActive).IsRequired().HasDefaultValue(true);
 
+        // Credential: the already-hashed value only. Plaintext is never stored,
+        // and the column is optional so accounts can exist before provisioning.
+        builder.Property(u => u.PasswordHash)
+            .HasColumnName("PasswordHash")
+            .HasMaxLength(512)
+            .IsUnicode(false);
+
+        builder.Ignore(u => u.HasPassword);
+
         // Auditing.
         builder.Property(u => u.CreatedAtUtc).IsRequired();
         builder.Property(u => u.CreatedBy).HasMaxLength(256);

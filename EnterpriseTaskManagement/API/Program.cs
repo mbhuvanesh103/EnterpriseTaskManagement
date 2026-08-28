@@ -1,9 +1,13 @@
 using System.Reflection;
+using System.Text;
 
 using EnterpriseTaskManagement.API.Middleware;
 using EnterpriseTaskManagement.Application;
 using EnterpriseTaskManagement.Infrastructure;
+using EnterpriseTaskManagement.Infrastructure.Authentication;
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,7 +19,48 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 builder.Services.AddApplication();                       // MediatR + FluentValidation + validation pipeline
-builder.Services.AddInfrastructure(builder.Configuration); // EF Core 10 + SQL Server + repositories
+builder.Services.AddInfrastructure(builder.Configuration); // EF Core 10 + SQL Server + repositories + auth services
+
+// ---------------------------------------------------------------------------
+// JWT bearer authentication. Issuer, audience, signature and lifetime are all
+// validated; unsigned tokens are never accepted. The signing key comes from
+// configuration only (User Secrets or the Jwt__SecretKey environment variable).
+// ---------------------------------------------------------------------------
+var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
+    ?? throw new InvalidOperationException(
+        "Missing 'Jwt' configuration section (Issuer, Audience, SecretKey, ExpirationMinutes).");
+
+if (string.IsNullOrWhiteSpace(jwtSettings.SecretKey)
+    || Encoding.UTF8.GetByteCount(jwtSettings.SecretKey) < JwtSettings.MinimumSecretKeyBytes)
+{
+    throw new InvalidOperationException(
+        "Missing or too short 'Jwt:SecretKey' (minimum 32 bytes). Configure it with " +
+        "'dotnet user-secrets set \"Jwt:SecretKey\" \"<random-value>\"' or the " +
+        "Jwt__SecretKey environment variable. It must never be committed.");
+}
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.MapInboundClaims = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtSettings.Issuer,
+            ValidateAudience = true,
+            ValidAudience = jwtSettings.Audience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
+            ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
+            ValidateLifetime = true,
+            RequireSignedTokens = true,
+            RequireExpirationTime = true,
+            ClockSkew = TimeSpan.FromSeconds(30),
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 // Single global exception -> RFC 7807 ProblemDetails translator.
 builder.Services.AddProblemDetails();
@@ -30,6 +75,33 @@ builder.Services.AddSwaggerGen(options =>
         Title = "Enterprise Task Management API",
         Version = "v1",
         Description = "Clean Architecture + DDD + CQRS API backed by EF Core 10 and SQL Server.",
+    });
+
+    // Bearer token workflow so protected endpoints can be exercised from Swagger UI.
+    const string securitySchemeId = "Bearer";
+    options.AddSecurityDefinition(securitySchemeId, new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Paste the accessToken returned by POST /api/Auth/login.",
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = securitySchemeId,
+                },
+            },
+            Array.Empty<string>()
+        },
     });
 
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
@@ -59,6 +131,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 
