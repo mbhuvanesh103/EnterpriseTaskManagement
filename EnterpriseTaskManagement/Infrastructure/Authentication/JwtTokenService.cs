@@ -1,4 +1,12 @@
-using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+
+using EnterpriseTaskManagement.Application.Interfaces.Authentication;
+using EnterpriseTaskManagement.Domain.Entities.Users;
+
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Text;
 
