@@ -428,3 +428,59 @@ once you run `dotnet build` / `dotnet run` locally.
 
 No JWT/authentication, no React changes, and no Projects or Tasks features were added in
 this step.
+
+## PHASE 7 — COMPLETED (JWT Authentication)
+
+### Inspected before changing
+`Domain/Entities/Users/User.cs`, `Application/Interfaces/Persistence/IUserRepository.cs`,
+`Infrastructure/Persistence/Repositories/UserRepository.cs`, `Application/DependencyInjection.cs`,
+`Infrastructure/DependencyInjection.cs`, `API/Program.cs`, `API/Middleware/GlobalExceptionHandler.cs`,
+`API/Controllers/UsersController.cs`, `appsettings*.json`, all four `.csproj` files.
+No pre-existing auth code was found, so nothing was duplicated or rewritten.
+
+### New files
+- `Application/Interfaces/Authentication/IPasswordHasher.cs` — hash/verify abstraction.
+- `Application/Interfaces/Authentication/IJwtTokenService.cs` — access-token abstraction (`AccessToken`).
+- `Application/Common/Exceptions/AuthenticationFailedException.cs` — single generic failure (no user enumeration).
+- `Application/Features/Auth/Commands/Login/{LoginCommand,LoginCommandHandler,LoginCommandValidator,LoginResponse}.cs`.
+- `Infrastructure/Authentication/PasswordHasher.cs` — PBKDF2 (`Rfc2898DeriveBytes`, HMAC-SHA256, per-password salt, fixed-time compare).
+- `Infrastructure/Authentication/JwtSettings.cs` — strongly typed `Jwt` section with validation.
+- `Infrastructure/Authentication/JwtTokenService.cs` — HMAC-SHA256 signing via `JsonWebTokenHandler`.
+- `API/Controllers/AuthController.cs` — `POST /api/Auth/login`, `ISender` only.
+- `EnterpriseTaskManagement.slnx` — the solution file (it was missing; created and all four projects added).
+
+### Modified files
+- `Domain/Entities/Users/User.cs` — added framework-free `PasswordHash`/`HasPassword` and `SetPasswordHash` (provisioning pathway only; no plaintext ever stored or returned).
+- `Infrastructure/Persistence/Configurations/UserConfiguration.cs` — maps `PasswordHash` (non-unicode, 512), ignores `HasPassword`.
+- `Application/Interfaces/Persistence/IUserRepository.cs` + `UserRepository.cs` — email lookup used by login (still no EF types in Application).
+- `Infrastructure/DependencyInjection.cs` — registers `JwtSettings`, `IPasswordHasher`, `IJwtTokenService`.
+- `API/Middleware/GlobalExceptionHandler.cs` — `AuthenticationFailedException` → 401 with a fixed generic detail. Single exception pipeline retained.
+- `API/Program.cs` — `AddAuthentication().AddJwtBearer(...)` validating issuer, audience, signing key, signature (HMAC-SHA256 only), lifetime and expiration; `AddAuthorization()`; `UseAuthentication()` before `UseAuthorization()`; Swagger Bearer scheme added once.
+- `API/Controllers/UsersController.cs` — `[Authorize]` on `GET /api/Users` only. No roles.
+- `appsettings.json` / `appsettings.Development.json` — `Jwt` placeholders with an **empty** `SecretKey` (no usable secret committed).
+- `Application/Common/Behaviors/ValidationBehavior.cs` — disambiguated `ValidationException` (build fix).
+- `Infrastructure/*.csproj` — `Microsoft.IdentityModel.JsonWebTokens 8.15.0`; documented `NoWarn NU1903` for the SqlClient-transitive `System.Security.Cryptography.Xml` advisory that no published version resolves.
+
+### Flow
+`POST /api/Auth/login` → `AuthController` → `LoginCommand` → MediatR (validation behavior) →
+`LoginCommandHandler` → `Email` VO normalization → `IUserRepository.GetByEmailAsync` →
+`IPasswordHasher.Verify` → active/not-deleted check → `IJwtTokenService.CreateAccessToken` →
+`LoginResponse { accessToken, expiresAt, userPublicId, fullName, email }`.
+Protected request: `Authorization: Bearer <token>` → JwtBearer validation → `GET /api/Users` → `GetAllUsersQuery`.
+
+### Local secret setup (never committed)
+```
+cd EnterpriseTaskManagement/API
+dotnet user-secrets init
+dotnet user-secrets set "Jwt:SecretKey" "<32+ byte random value>"
+dotnet user-secrets set "ConnectionStrings:SqlServer" "<your SQL Server connection string>"
+```
+Or environment variables `Jwt__SecretKey` / `ConnectionStrings__SqlServer`. Startup fails fast with a clear message if the key is missing or shorter than 32 bytes.
+
+### Actual verification results
+- `dotnet restore` — succeeded (.NET SDK 10.0.103).
+- `dotnet build EnterpriseTaskManagement.slnx` — **Build succeeded, 0 Warning(s), 0 Error(s)**.
+- `dotnet test` — ran successfully; there are **no test projects** in the solution, so no tests executed.
+- Live checks NOT performed: no SQL Server instance and no provisioned user with a password hash are available in this environment, so login, the 401/200 behaviour of `GET /api/Users`, and the Swagger UI at `/swagger` were **not** exercised over HTTP. Configuration was reviewed instead; Swagger is registered once and enabled in Development, and all six endpoints are attributed.
+
+No role-based authorization, refresh tokens, Departments/Projects/Tasks features, React auth, or mock data were added. **Phase 8 — Role-Based Authorization** remains upcoming and is not implemented.
