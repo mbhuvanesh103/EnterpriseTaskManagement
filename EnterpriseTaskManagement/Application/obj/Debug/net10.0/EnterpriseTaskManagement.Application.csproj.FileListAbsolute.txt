@@ -1,0 +1,5 @@
+/dev-server/EnterpriseTaskManagement/Application/obj/Debug/net10.0/EnterpriseTaskManagement.Application.csproj.AssemblyReference.cache
+/dev-server/EnterpriseTaskManagement/Application/obj/Debug/net10.0/EnterpriseTaskManagement.Application.GeneratedMSBuildEditorConfig.editorconfig
+/dev-server/EnterpriseTaskManagement/Application/obj/Debug/net10.0/EnterpriseTaskManagement.Application.AssemblyInfoInputs.cache
+/dev-server/EnterpriseTaskManagement/Application/obj/Debug/net10.0/EnterpriseTaskManagement.Application.AssemblyInfo.cs
+/dev-server/EnterpriseTaskManagement/Application/obj/Debug/net10.0/EnterpriseTaskManagement.Application.csproj.CoreCompileInputs.cache

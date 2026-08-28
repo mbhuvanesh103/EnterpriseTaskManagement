@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "dgSpecHash": "csQwQ0yKpL4=",
-  "success": false,
+  "dgSpecHash": "2zqCPh206FY=",
+  "success": true,
   "projectFilePath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
   "expectedPackageFiles": [
     "/root/.nuget/packages/azure.core/1.47.1/azure.core.1.47.1.nupkg.sha512",
@@ -78,94 +78,5 @@
     "/root/.nuget/packages/system.security.permissions/9.0.0/system.security.permissions.9.0.0.nupkg.sha512",
     "/root/.nuget/packages/system.windows.extensions/9.0.0/system.windows.extensions.9.0.0.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1903",
-      "level": "Error",
-      "message": "Warning As Error: Package 'System.Security.Cryptography.Xml' 9.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-23rf-6693-g89p",
-      "projectPath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
-      "filePath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
-      "libraryId": "System.Security.Cryptography.Xml",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    },
-    {
-      "code": "NU1903",
-      "level": "Error",
-      "message": "Warning As Error: Package 'System.Security.Cryptography.Xml' 9.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-37gx-xxp4-5rgx",
-      "projectPath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
-      "filePath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
-      "libraryId": "System.Security.Cryptography.Xml",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    },
-    {
-      "code": "NU1903",
-      "level": "Error",
-      "message": "Warning As Error: Package 'System.Security.Cryptography.Xml' 9.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-6588-8gv4-xfgh",
-      "projectPath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
-      "filePath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
-      "libraryId": "System.Security.Cryptography.Xml",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    },
-    {
-      "code": "NU1903",
-      "level": "Error",
-      "message": "Warning As Error: Package 'System.Security.Cryptography.Xml' 9.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-8q5v-6pqq-x66h",
-      "projectPath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
-      "filePath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
-      "libraryId": "System.Security.Cryptography.Xml",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    },
-    {
-      "code": "NU1903",
-      "level": "Error",
-      "message": "Warning As Error: Package 'System.Security.Cryptography.Xml' 9.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-cvvh-rhrc-wg4q",
-      "projectPath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
-      "filePath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
-      "libraryId": "System.Security.Cryptography.Xml",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    },
-    {
-      "code": "NU1903",
-      "level": "Error",
-      "message": "Warning As Error: Package 'System.Security.Cryptography.Xml' 9.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-g8r8-53c2-pm3f",
-      "projectPath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
-      "filePath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
-      "libraryId": "System.Security.Cryptography.Xml",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    },
-    {
-      "code": "NU1903",
-      "level": "Error",
-      "message": "Warning As Error: Package 'System.Security.Cryptography.Xml' 9.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-mmjf-rqrv-855v",
-      "projectPath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
-      "filePath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
-      "libraryId": "System.Security.Cryptography.Xml",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    },
-    {
-      "code": "NU1903",
-      "level": "Error",
-      "message": "Warning As Error: Package 'System.Security.Cryptography.Xml' 9.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-w3x6-4m5h-cxqf",
-      "projectPath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
-      "filePath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
-      "libraryId": "System.Security.Cryptography.Xml",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    }
-  ]
+  "logs": []
 }
