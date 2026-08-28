@@ -21,7 +21,8 @@ public sealed class User : AggregateRoot<long>
         Email email,
         EmployeeCode employeeCode,
         Guid departmentId,
-        bool isActive)
+        bool isActive,
+        string? passwordHash = null)
         : base(id)
     {
         PublicId = publicId;
@@ -30,6 +31,7 @@ public sealed class User : AggregateRoot<long>
         EmployeeCode = employeeCode;
         DepartmentId = departmentId;
         IsActive = isActive;
+        PasswordHash = passwordHash;
     }
 
     /// <summary>Stable, externally shareable identifier (exposed by the API).</summary>
@@ -49,6 +51,33 @@ public sealed class User : AggregateRoot<long>
 
     /// <summary>Whether the user may authenticate and be assigned work.</summary>
     public bool IsActive { get; private set; }
+
+    /// <summary>
+    /// Already-hashed credential, or <c>null</c> for an account provisioned
+    /// without one (such an account can never authenticate). The Domain stores
+    /// the value opaquely: it never hashes, verifies or accepts a plaintext
+    /// password, and the value is never exposed by the API.
+    /// </summary>
+    public string? PasswordHash { get; private set; }
+
+    /// <summary>Whether the account has a credential and may attempt to log in.</summary>
+    public bool HasPassword => !string.IsNullOrWhiteSpace(PasswordHash);
+
+    /// <summary>
+    /// Sets or replaces the stored credential during account provisioning. The
+    /// caller must pass a value produced by the application's password hasher;
+    /// plaintext must never reach this method.
+    /// </summary>
+    public void SetPasswordHash(string passwordHash)
+    {
+        if (string.IsNullOrWhiteSpace(passwordHash))
+        {
+            throw new DomainException("Password hash is required.");
+        }
+
+        PasswordHash = passwordHash;
+    }
+
 
     /// <summary>Factory for a brand new user.</summary>
     public static User Register(
