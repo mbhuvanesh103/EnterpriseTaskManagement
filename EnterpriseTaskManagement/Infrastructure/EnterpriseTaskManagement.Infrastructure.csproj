@@ -25,6 +25,8 @@
     <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.0" />
     <!-- JWT signing/serialization only. Token *validation* lives in the API. -->
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.*" />
+    <!-- Transitive pin: forces a patched System.Security.Cryptography.Xml (NU1903). -->
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.0" />
   </ItemGroup>
 
   <!-- Dependency direction: Domain <- Application <- Infrastructure. -->
