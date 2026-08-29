@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Security.Claims;
 using System.Text;
 
 using EnterpriseTaskManagement.API.Middleware;
@@ -57,6 +58,10 @@ builder.Services
             RequireSignedTokens = true,
             RequireExpirationTime = true,
             ClockSkew = TimeSpan.FromSeconds(30),
+            // MapInboundClaims is off, so the role claim type must be stated
+            // explicitly for [Authorize(Roles = "...")] to resolve it.
+            RoleClaimType = ClaimTypes.Role,
+            NameClaimType = "name",
         };
     });
 

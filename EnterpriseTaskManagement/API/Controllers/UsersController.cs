@@ -32,9 +32,12 @@ public sealed class UsersController : ControllerBase
     /// <response code="400">Input shape or domain invariant rejected the request.</response>
     /// <response code="409">Email or employee code already belongs to another user.</response>
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(CreateUserResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<CreateUserResponse>> Create(
         [FromBody] CreateUserCommand command,
         CancellationToken cancellationToken)
@@ -52,9 +55,10 @@ public sealed class UsersController : ControllerBase
     /// <response code="200">The user collection (possibly empty).</response>
     /// <response code="401">Missing, expired or invalid bearer token.</response>
     [HttpGet]
-    [Authorize]
+    [Authorize(Roles = "Admin,Manager")]
     [ProducesResponseType(typeof(GetAllUsersResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<GetAllUsersResponse>> GetAll(
         [FromQuery] Guid? departmentId,
         CancellationToken cancellationToken) =>
@@ -64,8 +68,11 @@ public sealed class UsersController : ControllerBase
     /// <response code="200">The requested user.</response>
     /// <response code="404">No such user, or the user is soft-deleted.</response>
     [HttpGet("{publicId:guid}")]
+    [Authorize(Roles = "Admin,Manager")]
     [ProducesResponseType(typeof(GetUserByPublicIdResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<GetUserByPublicIdResponse>> GetByPublicId(
         Guid publicId,
         CancellationToken cancellationToken) =>
@@ -78,10 +85,13 @@ public sealed class UsersController : ControllerBase
     /// <response code="404">No such user, or the user is soft-deleted.</response>
     /// <response code="409">The new email already belongs to another user.</response>
     [HttpPut("{publicId:guid}")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(UpdateUserResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<UpdateUserResponse>> Update(
         Guid publicId,
         [FromBody] UpdateUserRequest request,
@@ -104,9 +114,12 @@ public sealed class UsersController : ControllerBase
     /// <response code="400">The supplied identifier was rejected.</response>
     /// <response code="404">No such user, or the user is already soft-deleted.</response>
     [HttpDelete("{publicId:guid}")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Delete(Guid publicId, CancellationToken cancellationToken)
     {
         await _sender.Send(new DeleteUserCommand(publicId), cancellationToken);

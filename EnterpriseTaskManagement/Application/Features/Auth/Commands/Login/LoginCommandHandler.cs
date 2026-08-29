@@ -67,6 +67,7 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, LoginRes
             token.ExpiresAtUtc,
             user.PublicId,
             user.Name.Value,
-            user.Email.Value);
+            user.Email.Value,
+            user.Role.ToString());
     }
 }
