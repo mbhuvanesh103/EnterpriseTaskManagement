@@ -484,3 +484,143 @@ Or environment variables `Jwt__SecretKey` / `ConnectionStrings__SqlServer`. Star
 - Live checks NOT performed: no SQL Server instance and no provisioned user with a password hash are available in this environment, so login, the 401/200 behaviour of `GET /api/Users`, and the Swagger UI at `/swagger` were **not** exercised over HTTP. Configuration was reviewed instead; Swagger is registered once and enabled in Development, and all six endpoints are attributed.
 
 No role-based authorization, refresh tokens, Departments/Projects/Tasks features, React auth, or mock data were added. **Phase 8 — Role-Based Authorization** remains upcoming and is not implemented.
+
+---
+
+## PHASE 8 — COMPLETED (Role-Based Authorization)
+
+### Files inspected before changing anything
+`Domain/Entities/Users/User.cs`, `Domain/Common/*`, `Application/Features/Auth/Commands/Login/*`
+(command, handler, validator, response), `Application/Interfaces/Authentication/*`,
+`Application/Common/Models/UserSummary.cs`, the User query/command responses,
+`Infrastructure/Authentication/JwtTokenService.cs` + `JwtSettings.cs`,
+`Infrastructure/DependencyInjection.cs`, `Infrastructure/Persistence/Configurations/UserConfiguration.cs`,
+`Infrastructure/Persistence/Migrations/README.md`, `API/Program.cs`,
+`API/Controllers/UsersController.cs`, `API/Controllers/AuthController.cs`,
+`API/Middleware/GlobalExceptionHandler.cs`, `appsettings*.json`, all four `.csproj` files.
+No pre-existing role representation, policy, requirement handler or role claim existed, so only
+the true gaps below were filled. No Phase 7 code was rewritten or restarted.
+
+### New file
+- `Domain/Entities/Users/UserRole.cs` — framework-free `enum UserRole { Employee = 0, Manager = 1, Admin = 2 }`.
+  Exactly three roles, `Employee` first so it is the default value of the type. This is the single
+  source of truth for role names; no arbitrary role strings can enter the system.
+
+### Modified files
+- `Domain/Entities/Users/User.cs` — added `Role` with a private setter (default `UserRole.Employee`),
+  a `role` constructor parameter, `ChangeRole(UserRole)` validating with `Enum.IsDefined` and throwing
+  `DomainException` otherwise, `Register` fixed to `Employee`, and `Rehydrate` taking an optional
+  `role` that defaults to `Employee`. Still no EF/ASP.NET/JWT references.
+- `Infrastructure/Persistence/Configurations/UserConfiguration.cs` — `Role` mapped as a required
+  non-unicode `varchar(20)` via `HasConversion<string>()` with `HasDefaultValue(UserRole.Employee)`,
+  so existing rows and inserts without a role are valid and least-privileged.
+- `Infrastructure/Authentication/JwtTokenService.cs` — adds **exactly one** role claim,
+  `ClaimTypes.Role`, sourced from `user.Role.ToString()`. Issuer, audience, HMAC-SHA256 signing,
+  `NotBefore`/`Expires`/`IssuedAt` and the existing claim set are unchanged.
+- `API/Program.cs` — `TokenValidationParameters.RoleClaimType = ClaimTypes.Role` (and
+  `NameClaimType = "name"`). Required because Phase 7 sets `MapInboundClaims = false`; all Phase 7
+  issuer/audience/signature/lifetime validation is preserved verbatim.
+- `API/Controllers/UsersController.cs` — role attributes only (see table). Added 401/403
+  `ProducesResponseType` declarations so Swagger documents the real behaviour.
+- `Application/Features/Auth/Commands/Login/LoginResponse.cs` + `LoginCommandHandler.cs` —
+  appended a `Role` string (role name only) so a client can render the correct UI without decoding
+  the token. Additive and non-breaking; no hash, secret or internal id is exposed. Authorization
+  itself never reads this field — the JWT role claim is authoritative.
+
+### Endpoint restrictions and rationale
+| Endpoint | Attribute | Rationale |
+| --- | --- | --- |
+| `POST /api/Users` | `[Authorize(Roles = "Admin")]` | Creating accounts is user administration. |
+| `PUT /api/Users/{publicId}` | `[Authorize(Roles = "Admin")]` | Mutating identity/department is administration. |
+| `DELETE /api/Users/{publicId}` | `[Authorize(Roles = "Admin")]` | Soft-deleting accounts is administration. |
+| `GET /api/Users` | `[Authorize(Roles = "Admin,Manager")]` | Organizational read: managers need the roster. |
+| `GET /api/Users/{publicId}` | `[Authorize(Roles = "Admin,Manager")]` | Same read surface, single record. |
+| `POST /api/Auth/login` | anonymous | Authentication must precede authorization. |
+
+Employees hold a valid token but no user-management role, so every `/api/Users` call returns a
+framework-produced **403**; an absent/expired/invalid token returns a framework-produced **401**.
+No role checks exist in controllers or handlers, no custom policy, requirement handler or
+middleware was added, and the single `GlobalExceptionHandler` was left untouched — it never sees
+401/403 because the authorization middleware short-circuits before an exception can be thrown.
+
+### Database / migration status
+No EF Core migrations exist in this repository yet (`Persistence/Migrations` holds only its
+README), so there was nothing to add additively — the `Role` column will be included in the first
+`InitialCreate` migration generated locally. `dotnet ef` tooling is not installed here and **no SQL
+Server instance is available**, so no migration was generated and **no migration was applied**.
+For an already-deployed database the column is additive and safe: required with default `'Employee'`.
+No credentials, users or seed data were created.
+
+### Swagger status
+The Phase 7 Bearer security definition/requirement is preserved unchanged and still uses the same
+JWT mechanism; only the per-endpoint 401/403 response declarations were added. **Swagger UI was not
+exercised live** — the API cannot start without SQL Server, so `/swagger` was not opened in a browser.
+
+### Exact build/test output
+```
+$ dotnet restore EnterpriseTaskManagement.slnx
+  Restored .../EnterpriseTaskManagement.API.csproj (in 12.23 sec).
+  Restored .../EnterpriseTaskManagement.Application.csproj (in 12.13 sec).
+  Restored .../EnterpriseTaskManagement.Infrastructure.csproj (in 12.55 sec).
+
+$ dotnet build EnterpriseTaskManagement.slnx
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+```
+`dotnet test` — no test project exists in the solution, so no tests were executed.
+
+### Actual verification performed (and what was blocked)
+Verified: a throwaway probe project (referencing the built Infrastructure assembly, then deleted)
+issued a token for a user with `UserRole.Admin` using a local throwaway key and validated it with
+`RoleClaimType = ClaimTypes.Role`. Observed output — no token or secret printed:
+```
+valid=True
+claim types: aud, iss, exp, iat, nbf, sub, publicId, email, name,
+             http://schemas.microsoft.com/ws/2008/06/identity/claims/role, jti
+IsInRole(Admin)=True IsInRole(Employee)=False
+```
+This confirms exactly one role claim of the standard type is emitted and that `[Authorize(Roles = ...)]`
+resolves it (`IsInRole` is the same check the framework performs).
+
+Blocked: no SQL Server instance, no provisioned users with password hashes and no running server,
+so live HTTP tests (Admin 200 vs Employee 403 vs anonymous 401 on each endpoint), the Swagger UI and
+any database migration were **not** performed. Those results are not claimed.
+
+### Problems and fixes
+- `MapInboundClaims = false` from Phase 7 means inbound claim types are not remapped, so a role
+  claim would not be picked up by default — fixed by setting `RoleClaimType` explicitly, confirmed
+  by the probe above.
+- The probe initially failed with `DomainException: Last name is required.` from calling the wrong
+  `FullName.Create` overload — a probe-only mistake, corrected in the probe; no product code changed.
+
+**PHASE 8 — COMPLETED.** Role representation, JWT role claim and attribute-based endpoint
+restrictions are implemented and the claim/`IsInRole` behaviour was verified directly; the remaining
+live HTTP/DB scenarios are explicitly marked blocked above.
+
+### Next: Phase 9 — Department CRUD (not implemented)
+Department command/query use cases, validators, repository and controller are **not** part of this
+phase and no Department endpoints were added.
+
+### Interview explanation
+- **Authentication vs authorization** — authentication answers "who is this caller?" (the login
+  endpoint verifies a password hash and issues a signed token). Authorization answers "may this
+  caller do this?" (the role claim inside the token is matched against `[Authorize(Roles = ...)]`).
+  They are separate stages with separate failure codes.
+- **How the claim is recognized** — the token carries one `ClaimTypes.Role` claim. JwtBearer builds
+  a `ClaimsPrincipal` and, because `RoleClaimType` names that claim type, `IsInRole` and the
+  `RolesAuthorizationRequirement` behind `[Authorize(Roles = ...)]` read it natively. No custom code.
+- **401 vs 403** — 401 means the caller is not authenticated (missing, expired, wrong-issuer,
+  wrong-audience or badly signed token). 403 means the caller *is* authenticated but the role
+  requirement is not satisfied. Both come from the framework, not from our exception handler.
+- **Middleware order** — `UseAuthentication()` must run before `UseAuthorization()`: the principal
+  must exist before its roles can be evaluated. `UseExceptionHandler()` wraps both.
+- **Boundary attributes** — role rules live at the HTTP boundary (controller actions), keeping
+  handlers pure use cases with no transport or security concerns, so the same command can be reused
+  by another entry point with its own policy.
+- **Employee vs Admin branch** — an Employee's token authenticates fine, so the request reaches the
+  authorization stage and is rejected there with 403; an Admin's token satisfies the requirement and
+  the action dispatches its MediatR command as usual.
+- **Future expansion** — adding a role means one enum member plus updating the relevant attributes;
+  moving to fine-grained permissions means named policies registered in `AddAuthorization` (and
+  permission claims from the token service) without touching Domain or Application.

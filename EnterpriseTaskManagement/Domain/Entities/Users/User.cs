@@ -22,6 +22,7 @@ public sealed class User : AggregateRoot<long>
         EmployeeCode employeeCode,
         Guid departmentId,
         bool isActive,
+        UserRole role,
         string? passwordHash = null)
         : base(id)
     {
@@ -31,6 +32,7 @@ public sealed class User : AggregateRoot<long>
         EmployeeCode = employeeCode;
         DepartmentId = departmentId;
         IsActive = isActive;
+        Role = role;
         PasswordHash = passwordHash;
     }
 
@@ -51,6 +53,24 @@ public sealed class User : AggregateRoot<long>
 
     /// <summary>Whether the user may authenticate and be assigned work.</summary>
     public bool IsActive { get; private set; }
+
+    /// <summary>
+    /// The user's authorization role. Every user has exactly one; newly
+    /// registered users and pre-existing rows default to <see cref="UserRole.Employee"/>,
+    /// the least privileged value.
+    /// </summary>
+    public UserRole Role { get; private set; } = UserRole.Employee;
+
+    /// <summary>Assigns another role to the user.</summary>
+    public void ChangeRole(UserRole role)
+    {
+        if (!Enum.IsDefined(role))
+        {
+            throw new DomainException("Unknown user role.");
+        }
+
+        Role = role;
+    }
 
     /// <summary>
     /// Already-hashed credential, or <c>null</c> for an account provisioned
@@ -99,7 +119,8 @@ public sealed class User : AggregateRoot<long>
             email: email,
             employeeCode: employeeCode,
             departmentId: departmentId,
-            isActive: true);
+            isActive: true,
+            role: UserRole.Employee);
 
         user.RaiseDomainEvent(new UserRegisteredDomainEvent(user.PublicId, email.Value, DateTimeOffset.UtcNow));
         return user;
@@ -126,8 +147,9 @@ public sealed class User : AggregateRoot<long>
         EmployeeCode employeeCode,
         Guid departmentId,
         bool isActive,
+        UserRole role = UserRole.Employee,
         string? passwordHash = null) =>
-        new(id, publicId, name, email, employeeCode, departmentId, isActive, passwordHash);
+        new(id, publicId, name, email, employeeCode, departmentId, isActive, role, passwordHash);
 
     public void Rename(FullName name)
     {

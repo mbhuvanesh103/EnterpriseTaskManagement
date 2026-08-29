@@ -12,8 +12,9 @@ namespace EnterpriseTaskManagement.Infrastructure.Authentication;
 
 /// <summary>
 /// Issues HMAC-SHA256 signed JWT access tokens from <see cref="JwtSettings"/>.
-/// Claims are limited to subject, public id, email and name — no roles and no
-/// permissions (role-based authorization is a later phase).
+/// Claims are limited to subject, public id, email, name and exactly one
+/// standard ASP.NET Core role claim (<see cref="ClaimTypes.Role"/>) taken from
+/// the user's Domain role, so [Authorize(Roles = "...")] works natively.
 /// </summary>
 public sealed class JwtTokenService : IJwtTokenService
 {
@@ -52,6 +53,7 @@ public sealed class JwtTokenService : IJwtTokenService
             new(PublicIdClaimType, user.PublicId.ToString("N")),
             new(JwtRegisteredClaimNames.Email, user.Email.Value),
             new(JwtRegisteredClaimNames.Name, user.Name.Value),
+            new(ClaimTypes.Role, user.Role.ToString()),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
         };
 
