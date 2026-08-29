@@ -79,6 +79,16 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.IsActive).IsRequired().HasDefaultValue(true);
 
+        // Authorization role: stored as its readable name, required, and defaulted
+        // to the least privileged value so pre-existing rows remain valid.
+        builder.Property(u => u.Role)
+            .HasConversion<string>()
+            .HasColumnName("Role")
+            .HasMaxLength(20)
+            .IsUnicode(false)
+            .IsRequired()
+            .HasDefaultValue(UserRole.Employee);
+
         // Credential: the already-hashed value only. Plaintext is never stored,
         // and the column is optional so accounts can exist before provisioning.
         builder.Property(u => u.PasswordHash)
