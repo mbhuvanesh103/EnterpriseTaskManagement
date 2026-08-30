@@ -4,6 +4,7 @@ using EnterpriseTaskManagement.Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 using ApplicationValidationException = EnterpriseTaskManagement.Application.Common.Exceptions.ValidationException;
@@ -82,6 +83,12 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
 
         ConflictException conflict => Problem(
             StatusCodes.Status409Conflict, "Conflict", conflict.Message),
+
+        // Optimistic concurrency: the rowversion token no longer matched, so the
+        // row was changed by someone else. Never silently overwrite it.
+        DbUpdateConcurrencyException => Problem(
+            StatusCodes.Status409Conflict, "Concurrency conflict",
+            "The resource was modified by another request. Reload it and retry."),
 
         ApplicationValidationException validation => WithErrors(
             Problem(StatusCodes.Status400BadRequest, "Validation failed", validation.Message),

@@ -598,9 +598,8 @@ any database migration were **not** performed. Those results are not claimed.
 restrictions are implemented and the claim/`IsInRole` behaviour was verified directly; the remaining
 live HTTP/DB scenarios are explicitly marked blocked above.
 
-### Next: Phase 9 — Department CRUD (not implemented)
-Department command/query use cases, validators, repository and controller are **not** part of this
-phase and no Department endpoints were added.
+### Next: Phase 9 — Department CRUD
+Implemented in the section at the end of this document.
 
 ### Interview explanation
 - **Authentication vs authorization** — authentication answers "who is this caller?" (the login
@@ -624,3 +623,115 @@ phase and no Department endpoints were added.
 - **Future expansion** — adding a role means one enum member plus updating the relevant attributes;
   moving to fine-grained permissions means named policies registered in `AddAuthorization` (and
   permission claims from the token service) without touching Domain or Application.
+
+---
+
+## PHASE 9 — COMPLETED (Department CRUD)
+
+### Files inspected before writing
+`Domain/Entities/Users/User.cs`, `Domain/Common/{BaseEntity,AuditableEntity,AggregateRoot}.cs`,
+the whole `Application/Features/Users/**` tree (command/handler/validator/response conventions),
+`Application/Common/Models/UserSummary.cs`, `Application/Interfaces/Persistence/IUserRepository.cs`,
+`Infrastructure/Persistence/{ApplicationDbContext.cs,Configurations/UserConfiguration.cs,Repositories/UserRepository.cs}`,
+`Infrastructure/DependencyInjection.cs`, `Infrastructure/Persistence/Migrations/README.md`,
+`API/Controllers/UsersController.cs`, `API/Contracts/Users/UpdateUserRequest.cs`,
+`API/Middleware/GlobalExceptionHandler.cs`, `API/Program.cs`, `EnterpriseTaskManagement.slnx`.
+No test project exists in the solution.
+
+### Domain
+`Domain/Entities/Departments/Department.cs` — framework-free `AggregateRoot<long>` with `Id`,
+`PublicId`, `Name` (trimmed, required, max 150), `Code` (normalized upper case, `^[A-Z][A-Z0-9-]{1,19}$`),
+optional trimmed `Description` (max 500), `IsActive`, and behaviour-only mutation
+(`Create`, `Rehydrate`, `Update`, `Rename`, `Activate`, `Deactivate`, `Delete`). All invariants live
+here and are not duplicated in validators. No domain event was added: the established User events
+exist because other work reacts to them, and nothing reacts to department changes yet.
+
+`Domain/Entities/Users/User.cs` — added a private parameterless materialization constructor. EF Core
+cannot bind the owned `FullName` navigation through the existing parameterized constructor, so the
+model could not be built at all without it. It is private, framework-attribute-free, and unreachable
+from application code.
+
+### Application (no EF Core, no DbContext)
+- `Interfaces/Persistence/IDepartmentRepository.cs` — `GetByPublicIdAsync`, `CodeExistsAsync`
+  (with `excludePublicId`), `ListAllAsync`, `AddAsync`, `Update`, `SoftDelete`. No `IQueryable`.
+- `Common/Models/DepartmentSummary.cs` — primitive projection, matching `UserSummary`.
+- `Features/Departments/Commands/{CreateDepartment,UpdateDepartment,DeleteDepartment}` and
+  `Features/Departments/Queries/{GetAllDepartments,GetDepartmentByPublicId}` — command/query,
+  validator, handler and response per folder, exactly mirroring the Users convention. Handlers
+  depend only on `IDepartmentRepository` + `IUnitOfWork`, use domain behaviour, raise the existing
+  `NotFoundException` / `ConflictException`, and never touch persistence types.
+- Validators check input shape only (required, max length, non-empty `PublicId`); format and
+  normalization stay in the Domain.
+
+### Infrastructure
+- `Persistence/Configurations/DepartmentConfiguration.cs` — `etm.Departments`, PK `Id`, `PublicId`
+  as a 32-char `"N"` string with a unique index and an alternate key (users reference it),
+  unique `Code` index, `Name`/`Description`/`IsActive`, audit + soft-delete columns,
+  `HasQueryFilter(d => !d.IsDeleted)`, `Version` as SQL Server `rowversion`.
+- `Persistence/Repositories/DepartmentRepository.cs` — implements the Application interface, relies
+  on the query filter to hide deleted rows, and never removes a row physically.
+- `ApplicationDbContext` already exposed `DbSet<Department>`; `DependencyInjection` now registers
+  `IDepartmentRepository → DepartmentRepository` once.
+- `UserConfiguration` already had the required `User.DepartmentId → Department.PublicId`
+  relationship with `DeleteBehavior.Restrict`; unchanged, so deleting a department can never
+  cascade-delete users.
+
+### Schema and migration — actually generated
+`dotnet ef migrations add InitialCreate` succeeded through the Nix-provided SDK and produced
+`Infrastructure/Persistence/Migrations/20260830162955_InitialCreate.cs` (+ designer + snapshot).
+It creates `etm.Departments` and `etm.Users` with `FK_Users_Departments_DepartmentId` /
+`onDelete: ReferentialAction.Restrict`, unique indexes on `Departments.Code` and `Departments.PublicId`,
+and the rowversion columns. This is the first migration in the repository, so nothing was deleted,
+dropped or recreated. `Microsoft.EntityFrameworkCore.Design` was added to the API project (required by
+the EF tools) and a local `dotnet-tools.json` pins `dotnet-ef`. Design-time configuration was supplied
+through environment variables only — no credentials or secrets were committed.
+
+**`dotnet ef database update` was NOT run: no SQL Server instance is available in this environment.**
+
+### API
+- `API/Contracts/Departments/{CreateDepartmentRequest,UpdateDepartmentRequest}.cs` — the update body
+  deliberately has no `PublicId`; identity comes from the route only.
+- `API/Controllers/DepartmentsController.cs` — thin, `ISender`-only:
+  `POST /api/Departments` 201 `CreatedAtAction`, `GET /api/Departments` 200,
+  `GET /api/Departments/{publicId:guid}` 200/404, `PUT /api/Departments/{publicId:guid}` 200/400/404/409,
+  `DELETE /api/Departments/{publicId:guid}` 204/404.
+- Authorization uses the existing JWT role claim only: writes `[Authorize(Roles = "Admin")]`, reads
+  `[Authorize(Roles = "Admin,Manager,Employee")]`. No new permission system, no manual checks.
+  401 (missing/invalid token) and 403 (valid token, wrong role) both come from the framework.
+- `GlobalExceptionHandler` gained one mapping: `DbUpdateConcurrencyException → 409` with a generic
+  message, so a stale `rowversion` surfaces as a conflict instead of silently overwriting a row.
+  No database or exception detail is leaked.
+- Swagger uses the existing bearer configuration; the five endpoints carry `ProducesResponseType`
+  metadata for 200/201/400/401/403/404/409 plus XML summaries.
+
+### Soft delete, auditing, concurrency
+Delete is soft only: the aggregate marks itself deleted and deactivated, the row stays, and every
+read is filtered by the query filter, so a deleted department returns 404 and disappears from the
+list. `SaveChangesAsync` stamps audit values and converts any hard `Remove` into a soft delete.
+Concurrency is the database-owned `rowversion`; a lost update produces 409, never a silent overwrite.
+
+### Verification — exact outcomes
+- `dotnet restore` / `dotnet build EnterpriseTaskManagement.slnx`: **succeeded, 0 warnings, 0 errors**
+  (SDK 10.0.103 via `nix run nixpkgs#dotnet-sdk_10`).
+- `dotnet test EnterpriseTaskManagement.slnx`: ran, **no test projects exist**, so no tests were added
+  or executed; adding a test project was out of this phase's scope.
+- `dotnet ef migrations add`: **succeeded** (file listed above).
+- **Not performed:** `database update`, live HTTP calls, Swagger UI inspection and role-matrix
+  (Admin/Manager/Employee/anonymous) testing — no SQL Server instance, no running server and no
+  provisioned users. These results are not claimed.
+
+### Problems encountered and fixes
+1. EF model build failed with *"No suitable constructor was found for the type 'User'"* — the owned
+   `FullName` cannot be bound through the parameterized constructor. Fixed with a private
+   parameterless materialization constructor in the Domain (no framework reference).
+2. EF tooling refused to run until `Microsoft.EntityFrameworkCore.Design` was referenced by the
+   startup project; added.
+3. Design-time host creation failed on the missing connection string and JWT secret guards (correct,
+   secure behaviour). Supplied both as one-off environment variables for the tooling call only.
+
+**PHASE 9 — COMPLETED.** Domain, Application, Infrastructure and API Department CRUD are implemented,
+the build is clean and the migration was really generated; the database/HTTP checks that need a live
+SQL Server are explicitly marked as not performed above.
+
+### Next: Phase 10 — Project Management (not implemented)
+No Project entity, use cases, endpoints, tasks, dashboard or frontend work is part of this phase.

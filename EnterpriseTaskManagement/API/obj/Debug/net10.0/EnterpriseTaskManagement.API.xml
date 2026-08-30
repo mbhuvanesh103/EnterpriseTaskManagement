@@ -4,6 +4,26 @@
         <name>EnterpriseTaskManagement.API</name>
     </assembly>
     <members>
+        <member name="T:EnterpriseTaskManagement.API.Contracts.Departments.CreateDepartmentRequest">
+            <summary>Request body for <c>POST /api/Departments</c>.</summary>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Contracts.Departments.CreateDepartmentRequest.#ctor(System.String,System.String,System.String,System.Boolean)">
+            <summary>Request body for <c>POST /api/Departments</c>.</summary>
+        </member>
+        <member name="T:EnterpriseTaskManagement.API.Contracts.Departments.UpdateDepartmentRequest">
+            <summary>
+            Request body for <c>PUT /api/Departments/{publicId}</c>. It deliberately omits
+            <c>PublicId</c>: the identity of the resource can only come from the route, so
+            a mismatched or spoofed body identifier is impossible by construction.
+            </summary>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Contracts.Departments.UpdateDepartmentRequest.#ctor(System.String,System.String,System.String,System.Boolean)">
+            <summary>
+            Request body for <c>PUT /api/Departments/{publicId}</c>. It deliberately omits
+            <c>PublicId</c>: the identity of the resource can only come from the route, so
+            a mismatched or spoofed body identifier is impossible by construction.
+            </summary>
+        </member>
         <member name="T:EnterpriseTaskManagement.API.Contracts.Users.UpdateUserRequest">
             <summary>
             Request body for <c>PUT /api/Users/{publicId}</c>. It deliberately omits
@@ -29,6 +49,47 @@
             <response code="200">Authentication succeeded; the access token is returned.</response>
             <response code="400">The submitted input shape was rejected.</response>
             <response code="401">Authentication failed. The reason is deliberately generic.</response>
+        </member>
+        <member name="T:EnterpriseTaskManagement.API.Controllers.DepartmentsController">
+            <summary>
+            HTTP surface of the Department aggregate. The controller is a thin transport
+            adapter: it depends only on <see cref="T:MediatR.ISender"/> (MediatR), holds no business
+            logic, no validation logic and no persistence types. Authorization is the
+            standard framework attribute over the existing JWT role claim: writes are
+            Admin-only, reads are open to every authenticated organizational role.
+            </summary>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.DepartmentsController.Create(EnterpriseTaskManagement.API.Contracts.Departments.CreateDepartmentRequest,System.Threading.CancellationToken)">
+            <summary>Creates a new department.</summary>
+            <response code="201">Department created; the Location header points at the new resource.</response>
+            <response code="400">Input shape or domain invariant rejected the request.</response>
+            <response code="401">Missing, expired or invalid bearer token.</response>
+            <response code="403">Authenticated, but the role is not Admin.</response>
+            <response code="409">The code already belongs to another department.</response>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.DepartmentsController.GetAll(System.Threading.CancellationToken)">
+            <summary>Lists every department that is not soft-deleted.</summary>
+            <response code="200">The department collection (possibly empty).</response>
+            <response code="401">Missing, expired or invalid bearer token.</response>
+            <response code="403">Authenticated, but the role is not an organizational role.</response>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.DepartmentsController.GetByPublicId(System.Guid,System.Threading.CancellationToken)">
+            <summary>Reads a single department by its externally shareable identifier.</summary>
+            <response code="200">The requested department.</response>
+            <response code="404">No such department, or it is soft-deleted.</response>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.DepartmentsController.Update(System.Guid,EnterpriseTaskManagement.API.Contracts.Departments.UpdateDepartmentRequest,System.Threading.CancellationToken)">
+            <summary>Updates a department's name, code, description and active state.</summary>
+            <remarks>The identity is taken from the route only; the body carries no identifier.</remarks>
+            <response code="200">The updated department.</response>
+            <response code="400">Input shape or domain invariant rejected the request.</response>
+            <response code="404">No such department, or it is soft-deleted.</response>
+            <response code="409">The code already belongs to another department, or the row changed concurrently.</response>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.DepartmentsController.Delete(System.Guid,System.Threading.CancellationToken)">
+            <summary>Soft-deletes a department. The row is never physically removed.</summary>
+            <response code="204">The department is now marked deleted and deactivated.</response>
+            <response code="404">No such department, or it is already soft-deleted.</response>
         </member>
         <member name="T:EnterpriseTaskManagement.API.Controllers.UsersController">
             <summary>

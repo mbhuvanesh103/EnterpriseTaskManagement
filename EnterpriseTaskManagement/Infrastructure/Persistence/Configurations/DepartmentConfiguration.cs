@@ -34,7 +34,12 @@ public sealed class DepartmentConfiguration : IEntityTypeConfiguration<Departmen
             .IsUnicode(false)
             .IsRequired();
 
+        // Unique because the duplicate-code business rule depends on it.
         builder.HasIndex(d => d.Code).IsUnique();
+
+        builder.HasIndex(d => d.PublicId).IsUnique();
+
+        builder.Property(d => d.Description).HasMaxLength(Department.MaxDescriptionLength);
 
         builder.Property(d => d.IsActive).IsRequired().HasDefaultValue(true);
 
