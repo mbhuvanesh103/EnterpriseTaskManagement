@@ -36,6 +36,20 @@ public sealed class User : AggregateRoot<long>
         PasswordHash = passwordHash;
     }
 
+    // Materialization constructor. A persistence layer can only rebuild an
+    // aggregate whose state includes a nested value object by creating the
+    // instance first and then setting each mapped member. It is private, so no
+    // application code can produce an invalid user through it, and it carries no
+    // framework attribute or reference — the Domain stays framework independent.
+    private User()
+        : base(default)
+    {
+        Name = null!;
+        Email = null!;
+        EmployeeCode = null!;
+    }
+
+
     /// <summary>Stable, externally shareable identifier (exposed by the API).</summary>
     public Guid PublicId { get; private set; }
 
