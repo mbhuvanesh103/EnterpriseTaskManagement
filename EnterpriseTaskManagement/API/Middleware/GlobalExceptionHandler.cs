@@ -2,9 +2,9 @@ using EnterpriseTaskManagement.Application.Common.Exceptions;
 using EnterpriseTaskManagement.Domain.Exceptions;
 
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 using ApplicationValidationException = EnterpriseTaskManagement.Application.Common.Exceptions.ValidationException;
