@@ -2,6 +2,7 @@ using EnterpriseTaskManagement.Application.Common.Exceptions;
 using EnterpriseTaskManagement.Domain.Exceptions;
 
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
