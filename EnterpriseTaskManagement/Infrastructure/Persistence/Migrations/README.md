@@ -1,7 +1,8 @@
 # Migrations
 
-EF Core migrations for `ApplicationDbContext` live here. None are generated yet —
-this environment has no .NET SDK, so they must be created locally:
+EF Core migrations for `ApplicationDbContext` live here. `InitialCreate` is generated
+(Departments + Users). It has **not** been applied: no SQL Server instance was available.
+To create further migrations or apply them locally:
 
 ```sh
 cd EnterpriseTaskManagement
