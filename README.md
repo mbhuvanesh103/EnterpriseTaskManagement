@@ -598,9 +598,8 @@ any database migration were **not** performed. Those results are not claimed.
 restrictions are implemented and the claim/`IsInRole` behaviour was verified directly; the remaining
 live HTTP/DB scenarios are explicitly marked blocked above.
 
-### Next: Phase 9 — Department CRUD (not implemented)
-Department command/query use cases, validators, repository and controller are **not** part of this
-phase and no Department endpoints were added.
+### Next: Phase 9 — Department CRUD
+Implemented in the section at the end of this document.
 
 ### Interview explanation
 - **Authentication vs authorization** — authentication answers "who is this caller?" (the login
