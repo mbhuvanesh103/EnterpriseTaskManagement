@@ -101,6 +101,115 @@ namespace EnterpriseTaskManagement.Infrastructure.Persistence.Migrations
                     b.ToTable("Departments", "etm");
                 });
 
+            modelBuilder.Entity("EnterpriseTaskManagement.Domain.Entities.Projects.Project", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("Code");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTimeOffset?>("DeletedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("DeletedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("DepartmentId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(32)")
+                        .HasColumnName("DepartmentId");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
+                        .HasColumnName("Description");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("ManagerId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(32)")
+                        .HasColumnName("ManagerId");
+
+                    b.Property<DateTimeOffset?>("ModifiedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("Name");
+
+                    b.Property<string>("PublicId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(32)")
+                        .HasColumnName("PublicId");
+
+                    b.Property<DateTimeOffset>("StartDateUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)")
+                        .HasDefaultValue("Planned")
+                        .HasColumnName("Status");
+
+                    b.Property<DateTimeOffset?>("TargetEndDateUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<byte[]>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion")
+                        .HasColumnName("Version");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("DepartmentId");
+
+                    b.HasIndex("ManagerId");
+
+                    b.HasIndex("PublicId")
+                        .IsUnique();
+
+                    b.ToTable("Projects", "etm");
+                });
+
             modelBuilder.Entity("EnterpriseTaskManagement.Domain.Entities.Users.User", b =>
                 {
                     b.Property<long>("Id")
@@ -202,6 +311,23 @@ namespace EnterpriseTaskManagement.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Users", "etm");
+                });
+
+            modelBuilder.Entity("EnterpriseTaskManagement.Domain.Entities.Projects.Project", b =>
+                {
+                    b.HasOne("EnterpriseTaskManagement.Domain.Entities.Departments.Department", null)
+                        .WithMany()
+                        .HasForeignKey("DepartmentId")
+                        .HasPrincipalKey("PublicId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("EnterpriseTaskManagement.Domain.Entities.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("ManagerId")
+                        .HasPrincipalKey("PublicId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("EnterpriseTaskManagement.Domain.Entities.Users.User", b =>
