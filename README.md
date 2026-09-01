@@ -735,3 +735,61 @@ SQL Server are explicitly marked as not performed above.
 
 ### Next: Phase 10 — Project Management (not implemented)
 No Project entity, use cases, endpoints, tasks, dashboard or frontend work is part of this phase.
+
+## PHASE 10 — COMPLETED (Project Management)
+
+**Domain (framework-free)**
+- `Domain/Entities/Projects/ProjectStatus.cs` — closed status set: `Planned`, `Active`, `OnHold`, `Completed`, `Cancelled`.
+- `Domain/Entities/Projects/Project.cs` — aggregate root with `PublicId`, `Name`, `Code`
+  (normalized upper-case, `^[A-Z][A-Z0-9-]{1,19}$`), `Description`, `DepartmentId`
+  (Department `PublicId`), `ManagerId` (User `PublicId`), `Status`, `StartDateUtc`,
+  `TargetEndDateUtc`, plus behaviour: `Create`, `Rehydrate`, `Update`, `Rename`,
+  `ChangeCode`, `ChangeDescription`, `ReassignManager`, `TransferDepartment`,
+  `ChangeStatus` (terminal states are final), `Delete` (soft delete + cancel) and
+  `IsManagedBy`. Auditing, soft delete and `Version` come from `AggregateRoot<long>`.
+
+**Application (CQRS, no EF Core)**
+- `Interfaces/Persistence/IProjectRepository.cs`, `Common/Models/ProjectSummary.cs`,
+  `Common/Exceptions/ForbiddenAccessException.cs`.
+- `Features/Projects/Commands/{CreateProject,UpdateProject,DeleteProject}` and
+  `Features/Projects/Queries/{GetAllProjects,GetProjectByPublicId}` — command/query,
+  handler, response and FluentValidation validator each, following the Department pattern.
+- Handlers verify the referenced department and manager exist (manager must hold
+  `Manager` or `Admin`), reject duplicate codes with `ConflictException` (409), and own
+  the ownership rule: Admin may change any project; a Manager only projects whose
+  `ManagerId` equals the authenticated user's public id (otherwise 403).
+
+**Infrastructure (EF Core 10 + SQL Server)**
+- `Persistence/Configurations/ProjectConfiguration.cs` — `etm.Projects`, Guids as 32-char
+  "N" strings, unique indexes on `PublicId` and `Code`, indexes on `DepartmentId` /
+  `ManagerId`, `Status` stored as its name with a `Planned` default, `rowversion`
+  concurrency token, soft-delete query filter, `Restrict` FK to Department and
+  `NoAction` FK to User.
+- `Persistence/Repositories/ProjectRepository.cs`, `ApplicationDbContext.Projects`,
+  and `IProjectRepository → ProjectRepository` registered in `DependencyInjection`.
+- Migration `Persistence/Migrations/20260901140815_AddProjects` generated additively;
+  the earlier `InitialCreate` migration is untouched. **Not applied** — no SQL Server
+  instance is available in this environment.
+
+**API**
+- `Contracts/Projects/{CreateProjectRequest,UpdateProjectRequest}.cs` (no `PublicId`,
+  no requester identity in the body).
+- `Controllers/ProjectsController.cs` — thin, `ISender` only, PublicId routes:
+  `POST /api/Projects` (Admin, Manager), `GET /api/Projects` (+ optional
+  `departmentId` / `managerId` filters), `GET /api/Projects/{publicId}`,
+  `PUT /api/Projects/{publicId}`, `DELETE /api/Projects/{publicId}`.
+  Reads: Admin, Manager, Employee. Writes: Admin full; Manager create plus
+  update/delete restricted to their own projects (enforced in the handlers from the
+  token's `publicId` claim); Employee read-only.
+- `Middleware/GlobalExceptionHandler.cs` now maps `ForbiddenAccessException → 403`
+  alongside the existing 404/409/400/500 mappings.
+
+**Verification actually performed**
+- `dotnet build EnterpriseTaskManagement.slnx` → **Build succeeded, 0 Warning(s), 0 Error(s)**.
+- `dotnet ef migrations add AddProjects` → succeeded (design-time placeholder configuration).
+- No test projects exist, so no tests were run. No live API/Swagger/SQL Server calls were
+  possible: no SQL Server instance and no provisioned user in this environment.
+
+**PHASE 10 — COMPLETED.** Domain, Application, Infrastructure and API project management
+are implemented with role- and ownership-based authorization. Phase 11 (Task management)
+is upcoming and not started.
