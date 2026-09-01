@@ -24,6 +24,26 @@
             a mismatched or spoofed body identifier is impossible by construction.
             </summary>
         </member>
+        <member name="T:EnterpriseTaskManagement.API.Contracts.Projects.CreateProjectRequest">
+            <summary>Request body for <c>POST /api/Projects</c>.</summary>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Contracts.Projects.CreateProjectRequest.#ctor(System.String,System.String,System.Guid,System.Guid,System.String,System.String,System.Nullable{System.DateTimeOffset},System.Nullable{System.DateTimeOffset})">
+            <summary>Request body for <c>POST /api/Projects</c>.</summary>
+        </member>
+        <member name="T:EnterpriseTaskManagement.API.Contracts.Projects.UpdateProjectRequest">
+            <summary>
+            Request body for <c>PUT /api/Projects/{publicId}</c>. It deliberately omits
+            <c>PublicId</c> (route-only identity) and the requester identity, which is
+            taken from the authenticated token and can never be spoofed by the body.
+            </summary>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Contracts.Projects.UpdateProjectRequest.#ctor(System.String,System.String,System.Guid,System.Guid,System.String,System.String,System.Nullable{System.DateTimeOffset},System.Nullable{System.DateTimeOffset})">
+            <summary>
+            Request body for <c>PUT /api/Projects/{publicId}</c>. It deliberately omits
+            <c>PublicId</c> (route-only identity) and the requester identity, which is
+            taken from the authenticated token and can never be spoofed by the body.
+            </summary>
+        </member>
         <member name="T:EnterpriseTaskManagement.API.Contracts.Users.UpdateUserRequest">
             <summary>
             Request body for <c>PUT /api/Users/{publicId}</c>. It deliberately omits
@@ -91,6 +111,59 @@
             <response code="204">The department is now marked deleted and deactivated.</response>
             <response code="404">No such department, or it is already soft-deleted.</response>
         </member>
+        <member name="T:EnterpriseTaskManagement.API.Controllers.ProjectsController">
+            <summary>
+            HTTP surface of the Project aggregate. The controller is a thin transport
+            adapter: it depends only on <see cref="T:MediatR.ISender"/> (MediatR) and holds no
+            business logic. Role gates are the standard framework attribute over the
+            existing JWT role claim (Admin/Manager write, all organizational roles read);
+            the per-project ownership rule (a Manager may only change projects they lead)
+            is enforced inside the Application handlers using the token's public id.
+            </summary>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.ProjectsController.Create(EnterpriseTaskManagement.API.Contracts.Projects.CreateProjectRequest,System.Threading.CancellationToken)">
+            <summary>Creates a new project. Admin and Manager may create.</summary>
+            <response code="201">Project created; the Location header points at the new resource.</response>
+            <response code="400">Input shape or domain invariant rejected the request.</response>
+            <response code="403">Authenticated, but the role or ownership rule denies the operation.</response>
+            <response code="404">The referenced department or manager does not exist.</response>
+            <response code="409">The code already belongs to another project.</response>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.ProjectsController.GetAll(System.Nullable{System.Guid},System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <summary>Lists every project that is not soft-deleted, optionally filtered.</summary>
+            <response code="200">The project collection (possibly empty).</response>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.ProjectsController.GetByPublicId(System.Guid,System.Threading.CancellationToken)">
+            <summary>Reads a single project by its externally shareable identifier.</summary>
+            <response code="200">The requested project.</response>
+            <response code="404">No such project, or it is soft-deleted.</response>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.ProjectsController.Update(System.Guid,EnterpriseTaskManagement.API.Contracts.Projects.UpdateProjectRequest,System.Threading.CancellationToken)">
+            <summary>
+            Updates a project. An Admin may update any project; a Manager only projects
+            whose ManagerId equals their own public id.
+            </summary>
+            <response code="200">The updated project.</response>
+            <response code="403">The ownership rule denies the operation.</response>
+            <response code="409">Duplicate code, or the row changed concurrently.</response>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.ProjectsController.Delete(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Soft-deletes a project. An Admin may delete any project; a Manager only
+            projects they lead. The row is never physically removed.
+            </summary>
+            <response code="204">The project is now marked deleted and cancelled.</response>
+            <response code="403">The ownership rule denies the operation.</response>
+        </member>
+        <member name="P:EnterpriseTaskManagement.API.Controllers.ProjectsController.IsAdmin">
+            <summary>True when the authenticated caller holds the Admin role claim.</summary>
+        </member>
+        <member name="P:EnterpriseTaskManagement.API.Controllers.ProjectsController.RequesterPublicId">
+            <summary>
+            Public id of the authenticated caller, read from the token's <c>publicId</c>
+            claim (falling back to <c>sub</c>). It is never taken from the request body.
+            </summary>
+        </member>
         <member name="T:EnterpriseTaskManagement.API.Controllers.UsersController">
             <summary>
             HTTP surface of the User aggregate. The controller is a thin transport
@@ -138,6 +211,7 @@
             
              Mapping:
                NotFoundException                       -> 404
+               ForbiddenAccessException (ownership rule)   -> 403
                ConflictException (duplicate email/code) -> 409
                FluentValidation.ValidationException     -> 400 (+ per-field errors)
                Application ValidationException          -> 400 (+ per-field errors)

@@ -20,6 +20,7 @@ namespace EnterpriseTaskManagement.API.Middleware;
 ///
 /// Mapping:
 ///   NotFoundException                       -> 404
+///   ForbiddenAccessException (ownership rule)   -> 403
 ///   ConflictException (duplicate email/code) -> 409
 ///   FluentValidation.ValidationException     -> 400 (+ per-field errors)
 ///   Application ValidationException          -> 400 (+ per-field errors)
@@ -80,6 +81,9 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
         AuthenticationFailedException => Problem(
             StatusCodes.Status401Unauthorized, "Authentication failed",
             AuthenticationFailedException.GenericMessage),
+
+        ForbiddenAccessException forbidden => Problem(
+            StatusCodes.Status403Forbidden, "Forbidden", forbidden.Message),
 
         ConflictException conflict => Problem(
             StatusCodes.Status409Conflict, "Conflict", conflict.Message),

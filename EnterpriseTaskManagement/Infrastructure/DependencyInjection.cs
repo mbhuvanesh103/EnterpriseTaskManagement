@@ -53,6 +53,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+        services.AddScoped<IProjectRepository, ProjectRepository>();
 
         // Authentication services behind their Application-layer abstractions.
         // Jwt:SecretKey comes from User Secrets / the Jwt__SecretKey environment
