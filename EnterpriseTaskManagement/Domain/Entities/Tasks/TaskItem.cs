@@ -221,7 +221,7 @@ public sealed class TaskItem : AggregateRoot<long>
             : value;
 
     private static Guid? NormalizeAssignee(Guid? assignedUserId) =>
-        assignedUserId is null or { } when assignedUserId == Guid.Empty ? null : assignedUserId;
+        assignedUserId is { } id && id != Guid.Empty ? id : null;
 
     private static string NormalizeTitle(string title)
     {
