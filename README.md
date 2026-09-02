@@ -793,3 +793,65 @@ No Project entity, use cases, endpoints, tasks, dashboard or frontend work is pa
 **PHASE 10 — COMPLETED.** Domain, Application, Infrastructure and API project management
 are implemented with role- and ownership-based authorization. Phase 11 (Task management)
 is upcoming and not started.
+
+## PHASE 11 — COMPLETED (Task Management)
+
+Domain (framework-free)
+- `Domain/Entities/Tasks/TaskPriority.cs` — Low, Medium, High, Critical.
+- `Domain/Entities/Tasks/TaskItemStatus.cs` — Todo, InProgress, Review, Completed, Blocked
+  (named `TaskItemStatus` so it can never clash with `System.Threading.Tasks.TaskStatus`).
+- `Domain/Entities/Tasks/TaskItem.cs` — aggregate root (`TaskItem`, so it never clashes
+  with `System.Threading.Tasks.Task`; the API resource is still `/api/Tasks`). Internal
+  `Id`, external `PublicId`, `ProjectId` and optional `AssignedUserId` both referenced by
+  public id. Invariants: title required/trimmed/max 200, description max 2000, project
+  required, completed tasks are immutable (no edit, reassign or further status change),
+  a task must be assigned before moving to InProgress/Review/Completed, and only these
+  transitions are legal: Todo→InProgress|Blocked, InProgress→Review|Blocked|Todo,
+  Review→Completed|InProgress|Blocked, Blocked→Todo|InProgress. Completed is terminal and
+  stamps `CompletedAtUtc`. `Delete()` soft-deletes; rows are never physically removed.
+
+Application (use cases only — no EF Core)
+- `Interfaces/Persistence/ITaskRepository.cs` — EF-free abstraction (get by public id,
+  list all / by project / by assignee / by project manager, add, update, soft delete).
+- `Common/Models/TaskSummary.cs` — DTO of primitives and public ids only.
+- `Features/Tasks/Common/TaskAuthorization.cs` — the one place the ownership rules live.
+  Manager scope is resolved server-side from the Task's Project (`Project.IsManagedBy`),
+  Employee scope from `TaskItem.IsAssignedTo`; both use the token identity passed in as
+  `RequesterPublicId` / `RequesterRole`, never client input.
+- Commands: CreateTask, UpdateTask (descriptive fields only — not reassignment, not
+  status), DeleteTask, AssignTask (null assignee unassigns), ChangeTaskStatus.
+  Queries: GetAllTasks, GetTaskByPublicId. Each with its FluentValidation validator for
+  input shape only; all invariants stay in the Domain.
+
+Infrastructure (EF Core 10 + SQL Server)
+- `Persistence/Configurations/TaskItemConfiguration.cs` — `etm.Tasks`, Guids as 32-char
+  "N" strings, unique index on `PublicId`, indexes on `ProjectId`, `AssignedUserId` and
+  `Status`, FK to Project `Restrict` and optional FK to User `NoAction`, `Status` default
+  `Todo`, auditing columns, `IsDeleted` global query filter, `rowversion` concurrency.
+- `Persistence/Repositories/TaskRepository.cs`, `Tasks` DbSet on `ApplicationDbContext`,
+  `ITaskRepository` registered in `DependencyInjection`.
+- Additive migration `Persistence/Migrations/20260902135144_AddTasks.cs`. Existing
+  migrations were left untouched.
+
+API
+- `Contracts/Tasks/*` request records and `Controllers/TasksController.cs`: POST,
+  GET (list), GET `{publicId}`, PUT `{publicId}`, PUT `{publicId}/assignee`,
+  PUT `{publicId}/status`, DELETE `{publicId}`. The controller only depends on `ISender`,
+  reads the role and `publicId` claims from the validated JWT, and carries no business
+  logic. Role gates: Admin+Manager for create/update/assign/delete, all roles for reads
+  and for `status` (an Employee is then narrowed to their own assigned task inside the
+  handler). The existing `GlobalExceptionHandler` maps the reused exception types to
+  401/403 (`ForbiddenAccessException`) / 404 (`NotFoundException`) / 409
+  (`ConflictException`, `DbUpdateConcurrencyException`) ProblemDetails.
+
+Verification actually performed
+- `dotnet restore`: succeeded. `dotnet build EnterpriseTaskManagement.slnx`: **succeeded,
+  0 warnings, 0 errors**. `dotnet test`: ran and found **no test project in the solution**
+  (none exists yet), so no tests were executed.
+- The `AddTasks` migration was **generated** but **not applied**: no SQL Server instance
+  is reachable in this environment. Run
+  `dotnet ef database update --project Infrastructure --startup-project API` against a
+  real server.
+- No manual API or Swagger exercising was possible (no database, no provisioned users).
+
+Phase 12 — Dashboard APIs is upcoming and has not been implemented.
