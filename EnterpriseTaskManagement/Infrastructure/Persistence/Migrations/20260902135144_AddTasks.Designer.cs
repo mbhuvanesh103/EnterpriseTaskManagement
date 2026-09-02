@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnterpriseTaskManagement.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260902135122_AddTasks")]
+    [Migration("20260902135144_AddTasks")]
     partial class AddTasks
     {
         /// <inheritdoc />
@@ -266,11 +266,9 @@ namespace EnterpriseTaskManagement.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Priority")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
                         .IsUnicode(false)
                         .HasColumnType("varchar(20)")
-                        .HasDefaultValue("Medium")
                         .HasColumnName("Priority");
 
                     b.Property<string>("ProjectId")

@@ -84,8 +84,7 @@ public sealed class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
             .HasColumnName("Priority")
             .HasMaxLength(20)
             .IsUnicode(false)
-            .IsRequired()
-            .HasDefaultValue(TaskPriority.Medium);
+            .IsRequired();
 
         builder.Property(t => t.Status)
             .HasConversion<string>()

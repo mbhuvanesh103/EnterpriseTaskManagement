@@ -263,11 +263,9 @@ namespace EnterpriseTaskManagement.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Priority")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
                         .IsUnicode(false)
                         .HasColumnType("varchar(20)")
-                        .HasDefaultValue("Medium")
                         .HasColumnName("Priority");
 
                     b.Property<string>("ProjectId")
