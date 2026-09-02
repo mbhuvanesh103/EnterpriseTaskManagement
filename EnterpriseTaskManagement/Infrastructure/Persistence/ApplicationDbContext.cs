@@ -2,7 +2,9 @@ using EnterpriseTaskManagement.Application.Common.Interfaces;
 using EnterpriseTaskManagement.Domain.Common;
 using EnterpriseTaskManagement.Domain.Entities.Departments;
 using EnterpriseTaskManagement.Domain.Entities.Projects;
+using EnterpriseTaskManagement.Domain.Entities.Tasks;
 using EnterpriseTaskManagement.Domain.Entities.Users;
+
 
 using Microsoft.EntityFrameworkCore;
 
@@ -28,6 +30,9 @@ public sealed class ApplicationDbContext : DbContext, IUnitOfWork
     public DbSet<Department> Departments => Set<Department>();
 
     public DbSet<Project> Projects => Set<Project>();
+
+    public DbSet<TaskItem> Tasks => Set<TaskItem>();
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
