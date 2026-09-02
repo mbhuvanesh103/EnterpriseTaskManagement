@@ -44,6 +44,58 @@
             taken from the authenticated token and can never be spoofed by the body.
             </summary>
         </member>
+        <member name="T:EnterpriseTaskManagement.API.Contracts.Tasks.AssignTaskRequest">
+            <summary>
+            Request body for <c>PUT /api/Tasks/{publicId}/assignee</c>. A null
+            <c>AssignedUserId</c> unassigns the task.
+            </summary>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Contracts.Tasks.AssignTaskRequest.#ctor(System.Nullable{System.Guid})">
+            <summary>
+            Request body for <c>PUT /api/Tasks/{publicId}/assignee</c>. A null
+            <c>AssignedUserId</c> unassigns the task.
+            </summary>
+        </member>
+        <member name="T:EnterpriseTaskManagement.API.Contracts.Tasks.ChangeTaskStatusRequest">
+            <summary>
+            Request body for <c>PUT /api/Tasks/{publicId}/status</c>. <c>Status</c> is one
+            of Todo, InProgress, Review, Completed, Blocked.
+            </summary>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Contracts.Tasks.ChangeTaskStatusRequest.#ctor(System.String)">
+            <summary>
+            Request body for <c>PUT /api/Tasks/{publicId}/status</c>. <c>Status</c> is one
+            of Todo, InProgress, Review, Completed, Blocked.
+            </summary>
+        </member>
+        <member name="T:EnterpriseTaskManagement.API.Contracts.Tasks.CreateTaskRequest">
+            <summary>
+            Request body for <c>POST /api/Tasks</c>. Project and assignee are addressed by
+            their public ids; internal database ids are never accepted or returned.
+            </summary>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Contracts.Tasks.CreateTaskRequest.#ctor(System.String,System.Guid,System.String,System.Nullable{System.Guid},System.String,System.Nullable{System.DateTimeOffset})">
+            <summary>
+            Request body for <c>POST /api/Tasks</c>. Project and assignee are addressed by
+            their public ids; internal database ids are never accepted or returned.
+            </summary>
+        </member>
+        <member name="T:EnterpriseTaskManagement.API.Contracts.Tasks.UpdateTaskRequest">
+            <summary>
+            Request body for <c>PUT /api/Tasks/{publicId}</c>. It deliberately omits
+            <c>PublicId</c> (route-only identity), the assignee and the status: those are
+            changed through <c>PUT .../assignee</c> and <c>PUT .../status</c>. The
+            requester identity always comes from the token and can never be spoofed.
+            </summary>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Contracts.Tasks.UpdateTaskRequest.#ctor(System.String,System.String,System.String,System.Nullable{System.DateTimeOffset})">
+            <summary>
+            Request body for <c>PUT /api/Tasks/{publicId}</c>. It deliberately omits
+            <c>PublicId</c> (route-only identity), the assignee and the status: those are
+            changed through <c>PUT .../assignee</c> and <c>PUT .../status</c>. The
+            requester identity always comes from the token and can never be spoofed.
+            </summary>
+        </member>
         <member name="T:EnterpriseTaskManagement.API.Contracts.Users.UpdateUserRequest">
             <summary>
             Request body for <c>PUT /api/Users/{publicId}</c>. It deliberately omits
@@ -159,6 +211,65 @@
             <summary>True when the authenticated caller holds the Admin role claim.</summary>
         </member>
         <member name="P:EnterpriseTaskManagement.API.Controllers.ProjectsController.RequesterPublicId">
+            <summary>
+            Public id of the authenticated caller, read from the token's <c>publicId</c>
+            claim (falling back to <c>sub</c>). It is never taken from the request body.
+            </summary>
+        </member>
+        <member name="T:EnterpriseTaskManagement.API.Controllers.TasksController">
+            <summary>
+            HTTP surface of the Task aggregate. The controller is a thin transport
+            adapter: it depends only on <see cref="T:MediatR.ISender"/> (MediatR) and holds no
+            business logic. Role gates are the standard framework attribute over the
+            existing JWT role claim; the ownership rules (a Manager only inside projects
+            they lead, an Employee only their own assigned tasks) live in the Application
+            handlers and are always derived from the token, never from the request body.
+            </summary>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.TasksController.Create(EnterpriseTaskManagement.API.Contracts.Tasks.CreateTaskRequest,System.Threading.CancellationToken)">
+            <summary>Creates a task. Admin anywhere; Manager only in projects they manage.</summary>
+            <response code="201">Task created; the Location header points at the new resource.</response>
+            <response code="403">The role or ownership rule denies the operation.</response>
+            <response code="404">The referenced project or assignee does not exist.</response>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.TasksController.GetAll(System.Nullable{System.Guid},System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <summary>
+            Lists tasks visible to the caller: an Admin sees all, a Manager only tasks
+            in projects they manage, an Employee only tasks assigned to themselves.
+            </summary>
+            <response code="200">The task collection (possibly empty).</response>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.TasksController.GetByPublicId(System.Guid,System.Threading.CancellationToken)">
+            <summary>Reads a single task by its externally shareable identifier.</summary>
+            <response code="200">The requested task.</response>
+            <response code="403">The caller may not read this task.</response>
+            <response code="404">No such task, or it is soft-deleted.</response>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.TasksController.Update(System.Guid,EnterpriseTaskManagement.API.Contracts.Tasks.UpdateTaskRequest,System.Threading.CancellationToken)">
+            <summary>Updates a task's title, description, priority and due date.</summary>
+            <response code="200">The updated task.</response>
+            <response code="409">The row changed concurrently.</response>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.TasksController.Assign(System.Guid,EnterpriseTaskManagement.API.Contracts.Tasks.AssignTaskRequest,System.Threading.CancellationToken)">
+            <summary>Assigns or unassigns a task. Admin anywhere; Manager in their own projects.</summary>
+            <response code="200">The reassigned task.</response>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.TasksController.ChangeStatus(System.Guid,EnterpriseTaskManagement.API.Contracts.Tasks.ChangeTaskStatusRequest,System.Threading.CancellationToken)">
+            <summary>
+            Moves a task to another workflow state. An Employee may only do this for a
+            task assigned to themselves.
+            </summary>
+            <response code="200">The task in its new state.</response>
+            <response code="400">The transition is not allowed by the domain.</response>
+        </member>
+        <member name="M:EnterpriseTaskManagement.API.Controllers.TasksController.Delete(System.Guid,System.Threading.CancellationToken)">
+            <summary>Soft-deletes a task. The row is never physically removed.</summary>
+            <response code="204">The task is now marked deleted.</response>
+        </member>
+        <member name="P:EnterpriseTaskManagement.API.Controllers.TasksController.RequesterRole">
+            <summary>The caller's role, taken from the validated JWT role claim only.</summary>
+        </member>
+        <member name="P:EnterpriseTaskManagement.API.Controllers.TasksController.RequesterPublicId">
             <summary>
             Public id of the authenticated caller, read from the token's <c>publicId</c>
             claim (falling back to <c>sub</c>). It is never taken from the request body.
