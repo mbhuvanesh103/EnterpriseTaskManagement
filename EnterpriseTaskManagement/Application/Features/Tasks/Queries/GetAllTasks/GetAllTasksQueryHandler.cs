@@ -1,7 +1,6 @@
 using EnterpriseTaskManagement.Application.Common.Models;
 using EnterpriseTaskManagement.Application.Features.Tasks.Common;
 using EnterpriseTaskManagement.Application.Interfaces.Persistence;
-using EnterpriseTaskManagement.Domain.Entities.Projects;
 using EnterpriseTaskManagement.Domain.Entities.Tasks;
 
 using MediatR;
@@ -69,7 +68,4 @@ public sealed class GetAllTasksQueryHandler : IRequestHandler<GetAllTasksQuery, 
             { AssignedUserId: { } assignee } => await _tasks.ListByAssigneeAsync(assignee, cancellationToken),
             _ => await _tasks.ListAllAsync(cancellationToken),
         };
-
-    // Referenced for documentation clarity: manager scope resolves through Project.
-    private static bool LeadsProject(Project project, Guid managerPublicId) => project.IsManagedBy(managerPublicId);
 }
