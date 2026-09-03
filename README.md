@@ -854,4 +854,108 @@ Verification actually performed
   real server.
 - No manual API or Swagger exercising was possible (no database, no provisioned users).
 
-Phase 12 — Dashboard APIs is upcoming and has not been implemented.
+Phase 12 — Dashboard APIs was implemented next (see below).
+
+
+## PHASE 12 — COMPLETED (Dashboard APIs)
+
+Read-only reporting endpoints on top of Phases 1–11. Nothing existing was rewritten: the
+Domain, the aggregate repositories, the JWT/role pipeline, the exception handler, Swagger
+and all prior migrations are untouched.
+
+Endpoints (all `GET`, all bearer-token protected)
+- `GET /api/Dashboard/summary` — Admin, Manager, Employee. Headline counters for the
+  caller's scope.
+- `GET /api/Dashboard/tasks` — Admin, Manager, Employee. Task totals plus the status and
+  priority breakdowns.
+- `GET /api/Dashboard/projects` — Admin, Manager. Project totals plus the status breakdown.
+- `GET /api/Dashboard/users` — Admin only. Organization-wide user and department counters.
+
+Responses are explicit DTOs (`DashboardSummary`, `DashboardTaskMetrics`,
+`DashboardProjectMetrics`, `DashboardUserMetrics`, `DashboardCount`) wrapped in a per-query
+response record carrying `Scope` and `GeneratedAtUtc`. They expose counts and Domain enum
+names only — never entities, never internal database ids, never names, e-mail addresses,
+employee codes or password hashes.
+
+CQRS (Application, EF/DbContext/SQL free)
+- `GetDashboardSummaryQuery` / `GetTaskDashboardQuery` / `GetProjectDashboardQuery` /
+  `GetUserDashboardQuery`, each with its own handler and response record. No validators were
+  added: the queries carry no client input at all — the caller's identity and role are the
+  only inputs and both come from the validated JWT.
+- `Features/Dashboard/Common/DashboardScope.cs` holds the visibility rules in one place and
+  reuses the existing `TaskRequesterRole` representation, so no second role system exists.
+
+Read abstraction
+- The aggregate repositories return whole entity collections, which would mean loading every
+  row into memory to count it. Phase 12 therefore adds a purpose-built, EF-free
+  `IDashboardRepository` (Application) implemented by `DashboardRepository` (Infrastructure).
+  It returns finished read models: no `IQueryable`, no EF type and no `DbContext` crosses the
+  Application boundary.
+
+Authorization (server-derived only)
+- Admin: full dashboard. Manager: project and task data restricted to the projects whose
+  `ManagerId` equals the caller's `publicId`, resolved through the Project rows exactly as
+  `TaskRepository` does. Employee: task data restricted to tasks assigned to themselves, and
+  no organization endpoints — `/projects` and `/users` are refused. Refusals reuse
+  `ForbiddenAccessException`, so the existing `GlobalExceptionHandler` returns the standard
+  403 ProblemDetails; a missing or invalid token yields the framework 401.
+
+Soft delete and correctness
+- Every count runs through the global query filters configured in the entity configurations,
+  so soft-deleted users, departments, projects and tasks are excluded everywhere. Grouped
+  buckets are projected onto the full closed set of Domain enum values, so an empty bucket is
+  reported as `0` rather than omitted. Status/priority keys are the existing Domain names —
+  Planned/Active/OnHold/Completed/Cancelled, Todo/InProgress/Review/Completed/Blocked,
+  Low/Medium/High/Critical, Employee/Manager/Admin.
+
+Performance
+- All aggregation is pushed to SQL Server: one `GROUP BY (1)` projection of conditional
+  `COUNT`s per entity plus one `GROUP BY <enum>` per breakdown. Every query is
+  `AsNoTracking()`. No entity collection is materialized, so there is no load-all and no
+  N+1 behaviour.
+
+Date/time convention
+- The solution has no clock abstraction (Phases 1–11 call `DateTimeOffset.UtcNow` directly),
+  and Phase 12 keeps that convention rather than inventing a new one, centralized in
+  `DashboardInstant.Now()`. Everything is UTC. **Overdue** = non-deleted task with
+  `DueDateUtc < now` and `Status != Completed`. **Due today** = `DueDateUtc` inside the
+  half-open current UTC calendar day `[00:00Z, next 00:00Z)` with `Status != Completed`.
+
+Migration
+- **None was created, and no prior migration was altered.** Phase 12 adds no schema: the
+  indexes the dashboard needs already exist — `Tasks.ProjectId`, `Tasks.AssignedUserId`,
+  `Tasks.Status`, `Projects.ManagerId` — and the remaining groupings are full-scope
+  aggregates where an extra index would not pay for itself.
+
+Files created
+- `Application/Common/Models/Dashboard/DashboardCount.cs`, `DashboardTaskMetrics.cs`,
+  `DashboardProjectMetrics.cs`, `DashboardUserMetrics.cs`, `DashboardSummary.cs`
+- `Application/Interfaces/Persistence/IDashboardRepository.cs`
+- `Application/Features/Dashboard/Common/DashboardScope.cs`
+- `Application/Features/Dashboard/Queries/GetDashboardSummary/{Query,Response,QueryHandler}.cs`
+- `Application/Features/Dashboard/Queries/GetTaskDashboard/{Query,Response,QueryHandler}.cs`
+- `Application/Features/Dashboard/Queries/GetProjectDashboard/{Query,Response,QueryHandler}.cs`
+- `Application/Features/Dashboard/Queries/GetUserDashboard/{Query,Response,QueryHandler}.cs`
+- `Infrastructure/Persistence/Repositories/DashboardRepository.cs`
+- `API/Controllers/DashboardController.cs`
+
+Files modified
+- `Infrastructure/DependencyInjection.cs` — registered `IDashboardRepository`.
+- `README.md` — this section.
+
+Verification actually performed
+- `dotnet restore`: succeeded. `dotnet build EnterpriseTaskManagement.slnx`: **succeeded,
+  0 warnings, 0 errors**. `dotnet test`: ran and found **no test project in the solution**
+  (none exists), so no tests were executed.
+- **No live verification.** No SQL Server instance is reachable in this environment, so the
+  endpoints were not called, no Swagger page was opened and no token was exercised. Swagger
+  documents the four endpoints automatically through the existing setup and the XML comments.
+
+Limitations / deviations
+- Summary sections outside the caller's entitlement are returned as `null` rather than `0`,
+  so a scoped caller cannot mistake "hidden" for "none".
+- No per-department or per-manager project breakdown is exposed: it would require joining
+  Department/User names into a reporting projection, which is beyond the requested metrics —
+  an incomplete metric was deliberately not invented.
+
+Phases 1–11 are preserved in full; Phase 13 was **NOT** implemented.
