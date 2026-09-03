@@ -56,6 +56,10 @@ public static class DependencyInjection
         services.AddScoped<IProjectRepository, ProjectRepository>();
         services.AddScoped<ITaskRepository, TaskRepository>();
 
+        // Purpose-built read model for the dashboard: aggregates are computed by
+        // SQL Server, so no endpoint loads whole tables just to count them.
+        services.AddScoped<IDashboardRepository, DashboardRepository>();
+
 
         // Authentication services behind their Application-layer abstractions.
         // Jwt:SecretKey comes from User Secrets / the Jwt__SecretKey environment
