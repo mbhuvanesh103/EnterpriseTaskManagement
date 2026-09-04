@@ -973,7 +973,7 @@ Infrastructure, API, JWT, roles, repositories, migrations) were **not modified**
 | `src/types/domain.ts` | Strict frontend types; PublicId only; exact backend enum names (Task status Todo/InProgress/Review/Completed/Blocked, priority Low/Medium/High/Critical, project status Planned/Active/OnHold/Completed/Cancelled, roles Employee/Manager/Admin) |
 | `src/types/dashboard.ts` | Mirrors the Phase 12 dashboard DTOs (counts + scope + generatedAtUtc; `null` = not entitled) |
 | `src/auth/auth-context.tsx` | `AuthProvider` / `useAuth`: conceptual session (status, user, role, token, login, logout, hasRole/hasAnyRole). `login()` throws `AuthNotImplementedError` — no fake user, no request |
-| `src/auth/ProtectedRoute.tsx` | Route guard shell; preview mode until Phase 14, states plainly that no session exists |
+| `src/auth/ProtectedRoute.tsx` | Route guard shell; preview mode until Phase 14 (the layout states plainly that no session exists) |
 | `src/auth/RoleGate.tsx` | `RoleGate`, `Can`, `useCapability`, central `capabilities` map — role-aware UX in one place, not per page |
 | `src/components/layout/AppLayout.tsx` | Responsive authenticated shell: collapsible sidebar nav, header, breadcrumb, page title/description, actions slot, sign-out placeholder |
 | `src/components/common/LoadingState.tsx` | `LoadingState`, `LoadingCards`, `LoadingRows` |
@@ -1038,8 +1038,8 @@ TanStack Router + Query / Tailwind v4 / shadcn-ui / Axios / sonner stack.
 
 ### Limitations / deviations
 
-- `ProtectedRoute` intentionally renders content with a visible "not signed in"
-  notice instead of redirecting, so the foundation is reviewable before a real
+- `ProtectedRoute` intentionally renders content (the layout shows a visible
+  "not signed in" notice) instead of redirecting, so the foundation is reviewable before a real
   session exists. The redirect switches on in Phase 14.
 - Management pages are shells: columns, toolbars, pagination and dialogs exist,
   but no rows, because no API call or mock data is permitted here.
