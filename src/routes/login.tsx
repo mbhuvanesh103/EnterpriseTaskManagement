@@ -61,7 +61,9 @@ function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4 py-12">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Sign in</CardTitle>
+          <CardTitle asChild>
+            <h1 className="text-xl font-semibold tracking-tight">Sign in</h1>
+          </CardTitle>
           <CardDescription>
             Use your work email to access the Enterprise Task Management workspace.
           </CardDescription>
