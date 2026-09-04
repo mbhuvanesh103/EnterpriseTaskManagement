@@ -959,3 +959,94 @@ Limitations / deviations
   an incomplete metric was deliberately not invented.
 
 Phases 1–11 are preserved in full; Phase 13 was **NOT** implemented.
+
+## PHASE 13 — COMPLETED (React Frontend Foundation)
+
+Scope: frontend foundation only. No real API integration, no JWT/auth calls, no
+CRUD, no Docker/deployment. Backend Phases 1–12 (Domain, Application,
+Infrastructure, API, JWT, roles, repositories, migrations) were **not modified**.
+
+### Files created
+
+| File | Purpose |
+| --- | --- |
+| `src/types/domain.ts` | Strict frontend types; PublicId only; exact backend enum names (Task status Todo/InProgress/Review/Completed/Blocked, priority Low/Medium/High/Critical, project status Planned/Active/OnHold/Completed/Cancelled, roles Employee/Manager/Admin) |
+| `src/types/dashboard.ts` | Mirrors the Phase 12 dashboard DTOs (counts + scope + generatedAtUtc; `null` = not entitled) |
+| `src/auth/auth-context.tsx` | `AuthProvider` / `useAuth`: conceptual session (status, user, role, token, login, logout, hasRole/hasAnyRole). `login()` throws `AuthNotImplementedError` — no fake user, no request |
+| `src/auth/ProtectedRoute.tsx` | Route guard shell; preview mode until Phase 14, states plainly that no session exists |
+| `src/auth/RoleGate.tsx` | `RoleGate`, `Can`, `useCapability`, central `capabilities` map — role-aware UX in one place, not per page |
+| `src/components/layout/AppLayout.tsx` | Responsive authenticated shell: collapsible sidebar nav, header, breadcrumb, page title/description, actions slot, sign-out placeholder |
+| `src/components/common/LoadingState.tsx` | `LoadingState`, `LoadingCards`, `LoadingRows` |
+| `src/components/common/EmptyState.tsx` | Reusable empty state |
+| `src/components/common/ErrorState.tsx` | `ErrorState` (with retry) and `RestrictedState` |
+| `src/components/common/ConfirmDialog.tsx` | Reusable destructive-action confirmation |
+| `src/components/common/ValidationSummary.tsx` | Renders ProblemDetails `errors` map + inline `FieldError` |
+| `src/components/common/DataTableShell.tsx` | Table shell with loading/empty/error branches + `PaginationBar` matching `PagedResult` |
+| `src/features/dashboard/demo-data.ts` | **Clearly labelled demo data, visualization only.** Shaped exactly like the Phase 12 responses; the only fabricated numbers in the app; deleted in Phase 14 |
+| `src/routes/login.tsx`, `dashboard.tsx`, `users.tsx`, `departments.tsx`, `projects.tsx`, `tasks.tsx` | The six required routes |
+
+### Files modified
+
+- `src/routes/__root.tsx` — mounts `AuthProvider` and the toast `Toaster`; real app metadata replaces the template defaults.
+- `src/routes/index.tsx` — placeholder replaced by a redirect to `/dashboard`.
+- `src/lib/api/endpoints.ts` — paths aligned with the actual controllers (`/Auth`, `/Users`, `/Departments`, `/Projects`, `/Tasks`, `/Dashboard/...`).
+
+### Routes
+
+`/` → `/dashboard`, plus `/login`, `/dashboard`, `/users`, `/departments`,
+`/projects`, `/tasks`. Every route defines its own `head()` metadata.
+
+### API service foundation
+
+`src/config/env.ts` reads `VITE_API_BASE_URL` / `VITE_API_TIMEOUT_MS`;
+`src/lib/api/client.ts` is the single Axios instance with the Authorization
+bearer request interceptor (the Phase 14 injection point) and an RFC 7807
+ProblemDetails → `ApiError` response interceptor exposing `status` and
+`fieldErrors`. No hard-coded URLs, secrets, or tokens exist, and **no API call
+is made anywhere in the frontend yet**.
+
+### Dashboard UI
+
+Matches the Phase 12 response shape: headline counters, completion progress,
+task-by-status, task-by-priority, project-by-status (Manager/Admin),
+people-by-role (Admin only). All five states are demonstrable — loading, empty,
+error, normal, and restricted (per-section role fallbacks). Entitlement `null`
+renders "Not available", never `0`. A visible amber notice labels the demo
+figures on every render.
+
+### Accessibility and responsiveness
+
+Semantic landmarks (`header`, `main`, `nav`), single `<h1>` per page, table
+`caption`/`scope` headers, `role="status"`/`aria-live` on loading, `role="alert"`
+on errors, labelled inputs with `aria-invalid`/`aria-describedby`, keyboard-
+operable sidebar trigger and dialogs, and mobile-first layouts (sidebar collapses
+to an off-canvas sheet; grids reflow at `sm`/`lg`/`xl`).
+
+### Dependencies
+
+None added. Everything reuses the existing React 19 / TypeScript / Vite /
+TanStack Router + Query / Tailwind v4 / shadcn-ui / Axios / sonner stack.
+
+### Verification actually performed
+
+- `bun run build` (Vite production build): **succeeded**.
+- `bunx eslint .` after `--fix`: **0 errors**, 9 warnings — all pre-existing
+  `react-refresh/only-export-components` warnings in untouched template
+  `src/components/ui/*` files.
+- TypeScript is checked as part of the build pipeline and reports no errors.
+- No backend build was run in this phase and no backend file was touched.
+
+### Limitations / deviations
+
+- `ProtectedRoute` intentionally renders content with a visible "not signed in"
+  notice instead of redirecting, so the foundation is reviewable before a real
+  session exists. The redirect switches on in Phase 14.
+- Management pages are shells: columns, toolbars, pagination and dialogs exist,
+  but no rows, because no API call or mock data is permitted here.
+- The dashboard exposes a small state switcher so loading/empty/error/normal can
+  be reviewed; it is preview scaffolding and goes away with Phase 14.
+
+### Status
+
+Backend Phases 1–12 preserved unchanged. **Phase 14 (real API + auth
+integration) NOT implemented. Phase 15 (CRUD integration) NOT implemented.**
