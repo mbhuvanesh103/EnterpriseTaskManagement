@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { AuthNotImplementedError, useAuth } from "@/auth/auth-context";
 import { FieldError } from "@/components/common/ValidationSummary";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -61,9 +61,7 @@ function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4 py-12">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle asChild>
-            <h1 className="text-xl font-semibold tracking-tight">Sign in</h1>
-          </CardTitle>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">Sign in</h1>
           <CardDescription>
             Use your work email to access the Enterprise Task Management workspace.
           </CardDescription>
