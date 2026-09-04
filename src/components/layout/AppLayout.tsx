@@ -52,7 +52,7 @@ export function AppLayout({
   children: ReactNode;
 }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const { user, logout } = useAuth();
+  const { user, logout, status } = useAuth();
 
   return (
     <SidebarProvider>
@@ -130,6 +130,20 @@ export function AppLayout({
               </div>
               {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
             </div>
+            {status === "unauthenticated" ? (
+              <div
+                role="status"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground"
+              >
+                <span>
+                  You are not signed in. Sign-in is connected in a later step, so this page is shown
+                  as a preview of the interface.
+                </span>
+                <Button asChild size="sm" variant="outline">
+                  <Link to="/login">Go to sign in</Link>
+                </Button>
+              </div>
+            ) : null}
             {children}
           </div>
         </main>
