@@ -33,6 +33,16 @@ export const capabilities = {
   manageTasks: ["Admin", "Manager"],
   viewPeopleDashboard: ["Admin"],
   viewProjectDashboard: ["Admin", "Manager"],
+
+  // Navigation visibility (UX only):
+  // Admin: dashboard, users, departments, projects, tasks
+  // Manager: dashboard, projects, tasks
+  // Employee: dashboard, tasks
+  navDashboard: ["Admin", "Manager", "Employee"],
+  navUsers: ["Admin"],
+  navDepartments: ["Admin"],
+  navProjects: ["Admin", "Manager"],
+  navTasks: ["Admin", "Manager", "Employee"],
 } as const satisfies Record<string, readonly UserRole[]>;
 
 export type Capability = keyof typeof capabilities;
@@ -40,6 +50,11 @@ export type Capability = keyof typeof capabilities;
 export function useCapability(capability: Capability): boolean {
   const { hasAnyRole } = useAuth();
   return hasAnyRole(capabilities[capability]);
+}
+
+/** Role list for a capability, for callers that filter collections. */
+export function rolesFor(capability: Capability): readonly UserRole[] {
+  return capabilities[capability];
 }
 
 export function Can({
