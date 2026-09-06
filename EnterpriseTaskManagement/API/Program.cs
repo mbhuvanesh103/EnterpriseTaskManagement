@@ -67,6 +67,30 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+// ---------------------------------------------------------------------------
+// CORS. The React dev server runs on a different origin than the API, so the
+// browser needs an explicit allow-list. Origins come from configuration only
+// (Cors:AllowedOrigins) — there is no AllowAnyOrigin, and credentials are not
+// allowed because the frontend sends the JWT in the Authorization header.
+// ---------------------------------------------------------------------------
+const string frontendCorsPolicy = "FrontendDevOrigins";
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? [];
+
+builder.Services.AddCors(options =>
+    options.AddPolicy(frontendCorsPolicy, policy =>
+    {
+        if (allowedOrigins.Length == 0)
+        {
+            return; // No origins configured: cross-origin calls stay blocked.
+        }
+
+        policy.WithOrigins(allowedOrigins)
+            .WithHeaders("Authorization", "Content-Type")
+            .WithMethods("GET", "POST", "PUT", "DELETE");
+    }));
+
 // Single global exception -> RFC 7807 ProblemDetails translator.
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -136,6 +160,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors(frontendCorsPolicy);
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -1050,3 +1050,110 @@ TanStack Router + Query / Tailwind v4 / shadcn-ui / Axios / sonner stack.
 
 Backend Phases 1–12 preserved unchanged. **Phase 14 (real API + auth
 integration) NOT implemented. Phase 15 (CRUD integration) NOT implemented.**
+
+## PHASE 14 — COMPLETED (Real API + JWT Authentication Integration)
+
+Scope: real login against the existing backend endpoint, real bearer-token
+transport, true protected-route redirects, and live dashboard reads. **No CRUD
+integration (Phase 15) and no fabricated accounts, tokens or data.** Backend
+Phases 1–12 are unchanged apart from the single explicit CORS addition
+documented below; frontend Phase 13 structure is preserved.
+
+### Files created
+
+| File | Purpose |
+| --- | --- |
+| `src/features/dashboard/queries.ts` | TanStack Query options for the four dashboard endpoints; shared `staleTime`, and a retry policy that never retries 401/403 |
+
+### Files modified
+
+- `src/lib/api/client.ts` — bearer injected automatically from token storage; RFC 7807 → `ApiError` with `isUnauthorized` / `isForbidden`; central 401 handling via `setUnauthorizedHandler` (skipped for the login request itself, so no redirect loop); 403 normalized to "Access denied. Your role doesn't allow this action." with no redirect.
+- `src/auth/auth-context.tsx` — real `login()` calling `POST /api/Auth/login`; identity and role parsed **only** from the backend response (validated against the backend role names); session restored from storage with an `exp` sanity check; registers the central 401 invalidation handler. `AuthNotImplementedError` removed.
+- `src/config/env.ts` — added the user-snapshot storage key.
+- `src/auth/ProtectedRoute.tsx` — real redirect to `/login?redirect=<href>`; `/login` is never protected.
+- `src/routes/login.tsx` — submits real credentials, surfaces backend errors, validates and honours the `redirect` search param (in-app paths only, never back to `/login`).
+- `src/auth/RoleGate.tsx` — navigation capabilities added to the central capability map.
+- `src/components/layout/AppLayout.tsx` — sidebar entries filtered by capability; the "not signed in" preview banner removed; sign-out cancels in-flight queries, clears the cache, clears the session, then replaces history with `/login`.
+- `src/routes/dashboard.tsx` — live data from the four endpoints; per-section loading / empty / error / restricted states.
+- `EnterpriseTaskManagement/API/Program.cs`, `appsettings.json`, `appsettings.Development.json` — explicit CORS allow-list.
+
+### Files deleted
+
+- `src/features/dashboard/demo-data.ts` — the last fabricated numbers in the app.
+
+### Authentication endpoint and contract
+
+`POST /api/Auth/login` with `{ email, password }`, returning
+`{ accessToken, expiresAtUtc, publicId, fullName, email, role }` exactly as
+`LoginResponse` declares it. Role and identity are read from that response only.
+No refresh-token endpoint exists yet, so no refresh exchange is attempted — the
+extension point in the response interceptor remains unused rather than faked.
+
+### Token storage decision
+
+The access token is stored in `localStorage` under an env-configured key, the
+same mechanism Phase 13 established, because the API is a stateless bearer API
+on a different origin and sends no cookies (`withCredentials: false`). The
+trade-off is accepted deliberately: a cookie-based flow would need backend
+`SameSite`/CSRF work that is out of this phase's scope. The token is never
+logged and never placed in a URL. The stored `exp` is used only to avoid
+presenting an obviously dead token; it is never treated as an authorization
+decision.
+
+### Routes and role-based navigation
+
+Sidebar visibility comes from the central capability map: Admin sees dashboard,
+users, departments, projects and tasks; Manager sees dashboard, projects and
+tasks; Employee sees dashboard and tasks. **These checks are UX only.** The
+ASP.NET Core role policies remain the single security boundary.
+
+### Dashboard integration
+
+`/api/Dashboard/summary` and `/tasks` load for every signed-in role;
+`/projects` is requested only for Manager/Admin and `/users` only for Admin, so
+unentitled roles never fire a request that would 403. Sections render real
+loading, empty, error and restricted states, `null` renders "Not available"
+(never `0`), and there is no fallback data of any kind.
+
+### Environment and CORS
+
+The API base URL comes only from `VITE_API_BASE_URL` (see `.env.example`); no
+URL is hard-coded. The backend had no CORS configuration, which blocks every
+browser call from the dev origin, so the smallest sufficient policy was added:
+origins come from `Cors:AllowedOrigins` in configuration (development lists
+`http://localhost:8080` and `http://localhost:5173`, production is empty), with
+only `Authorization`/`Content-Type` headers and `GET/POST/PUT/DELETE` methods.
+There is no `AllowAnyOrigin`, no wildcard, and credentials are not allowed.
+
+### 401 vs 403
+
+401 → the session is invalidated once and the user is sent to `/login` with the
+attempted path preserved; the login request itself is exempt, so failed sign-ins
+show an inline error instead of looping. 403 → an "Access denied" message in
+place, no sign-out and no redirect.
+
+### Verification actually performed
+
+- `bunx tsgo --noEmit`: **0 errors**.
+- `bun run build`: **succeeded**.
+- `bunx eslint src`: **0 errors**, 10 pre-existing `react-refresh` warnings in untouched template `src/components/ui/*` files.
+- `dotnet build EnterpriseTaskManagement.slnx`: **0 warnings, 0 errors**.
+- `dotnet test`: restore succeeded and reported no test project — there is still no test project in the solution.
+- **Live auth / API / Swagger testing was NOT performed and is reported as blocked:** no SQL Server instance is reachable in this environment, so no database, no user accounts and no real credentials exist. No token was ever issued or exercised.
+
+### Security checklist
+
+No password, token or secret is logged, hard-coded or committed; credentials are
+sent only in the login request body over the configured API URL; role checks in
+the frontend are presentation-only; CORS is an explicit configured allow-list;
+no mock accounts, mock API or fake data exist anywhere in the production path.
+
+### Limitations / deviations
+
+- Session restore trusts only the stored token's presence and expiry; a `GET /api/Auth/me` endpoint does not exist, so the cached identity snapshot cannot be re-validated on load.
+- No refresh-token rotation, because the backend exposes no refresh endpoint.
+- Management list pages remain shells — populating them is Phase 15.
+
+### Status
+
+Phases 1–13 preserved. **Phase 15 (CRUD integration) NOT implemented.**
