@@ -8,16 +8,17 @@ import {
   type ReactNode,
 } from "react";
 
-import { tokenStorage } from "@/lib/api/client";
-import type { PublicId, UserRole } from "@/types/domain";
+import { apiClient, tokenStorage, setUnauthorizedHandler } from "@/lib/api/client";
+import { endpoints } from "@/lib/api/endpoints";
+import { USER_ROLES, type PublicId, type UserRole } from "@/types/domain";
 
 /**
- * Auth foundation ONLY (Phase 13).
+ * Real session state (Phase 14).
  *
- * There is no login request, no token issuing, and no hard-coded user here.
- * The provider models the conceptual session shape the real Phase 14
- * integration will fill in: it reads any token that already exists in storage,
- * exposes role helpers for UX gating, and clears state on logout.
+ * Identity and role come ONLY from the backend login response
+ * (POST /api/Auth/login → LoginResponse) and are re-checked against the JWT's
+ * own expiry on restore. There are no fake accounts, no hard-coded users and no
+ * client-invented roles.
  *
  * SECURITY: role checks in this file are presentation-only. The ASP.NET Core
  * API remains the single security boundary.
@@ -43,8 +44,7 @@ export interface AuthContextValue {
   role: UserRole | null;
   accessToken: string | null;
   isAuthenticated: boolean;
-  /** Phase 14 will implement this against POST /api/Auth/login. */
-  login: (credentials: LoginCredentials) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<AuthenticatedUser>;
   logout: () => void;
   hasRole: (role: UserRole) => boolean;
   hasAnyRole: (roles: readonly UserRole[]) => boolean;
@@ -52,10 +52,55 @@ export interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-export class AuthNotImplementedError extends Error {
-  constructor() {
-    super("Sign-in is wired up in Phase 14. No credentials are sent yet.");
-    this.name = "AuthNotImplementedError";
+/** Exact shape of the backend LoginResponse record. */
+interface LoginResponsePayload {
+  accessToken: string;
+  expiresAt: string;
+  userPublicId: string;
+  fullName: string;
+  email: string;
+  role: string;
+}
+
+function isUserRole(value: string): value is UserRole {
+  return (USER_ROLES as readonly string[]).includes(value);
+}
+
+/** Reads the `exp` claim without trusting it for security — expiry check only. */
+function isTokenExpired(token: string): boolean {
+  const segments = token.split(".");
+  if (segments.length !== 3) return true;
+  try {
+    const payloadSegment = segments[1]!.replace(/-/g, "+").replace(/_/g, "/");
+    const payload = JSON.parse(atob(payloadSegment)) as { exp?: number };
+    if (typeof payload.exp !== "number") return true;
+    return payload.exp * 1000 <= Date.now();
+  } catch {
+    return true;
+  }
+}
+
+function toAuthenticatedUser(payload: LoginResponsePayload): AuthenticatedUser {
+  if (!isUserRole(payload.role)) {
+    throw new Error("The server returned an unrecognised role for this account.");
+  }
+  return {
+    publicId: payload.userPublicId,
+    fullName: payload.fullName,
+    email: payload.email,
+    role: payload.role,
+  };
+}
+
+function readStoredUser(): AuthenticatedUser | null {
+  const raw = tokenStorage.getUserSnapshot();
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as AuthenticatedUser;
+    if (!parsed?.publicId || !parsed?.role || !isUserRole(parsed.role)) return null;
+    return parsed;
+  } catch {
+    return null;
   }
 }
 
@@ -64,23 +109,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
-  // Session rehydration placeholder: a token present in storage is the only
-  // signal available until Phase 14 adds GET /api/Auth/me.
-  useEffect(() => {
-    const existing = tokenStorage.getAccessToken();
-    setAccessToken(existing);
-    setStatus(existing ? "authenticated" : "unauthenticated");
-  }, []);
-
-  const login = useCallback(async (_credentials: LoginCredentials) => {
-    throw new AuthNotImplementedError();
-  }, []);
-
-  const logout = useCallback(() => {
+  const clearSession = useCallback(() => {
     tokenStorage.clear();
     setAccessToken(null);
     setUser(null);
     setStatus("unauthenticated");
+  }, []);
+
+  // Session restore: a stored, unexpired token plus its identity snapshot.
+  useEffect(() => {
+    const existing = tokenStorage.getAccessToken();
+    const storedUser = readStoredUser();
+    if (!existing || isTokenExpired(existing) || !storedUser) {
+      tokenStorage.clear();
+      setStatus("unauthenticated");
+      return;
+    }
+    setAccessToken(existing);
+    setUser(storedUser);
+    setStatus("authenticated");
+  }, []);
+
+  // Central 401 reaction: the API client invalidates the session once, here.
+  useEffect(() => {
+    setUnauthorizedHandler(() => clearSession());
+    return () => setUnauthorizedHandler(null);
+  }, [clearSession]);
+
+  const login = useCallback(async (credentials: LoginCredentials) => {
+    const { data } = await apiClient.post<LoginResponsePayload>(
+      endpoints.auth.login,
+      credentials,
+    );
+    const authenticated = toAuthenticatedUser(data);
+    tokenStorage.setAccessToken(data.accessToken);
+    tokenStorage.setUserSnapshot(JSON.stringify(authenticated));
+    setAccessToken(data.accessToken);
+    setUser(authenticated);
+    setStatus("authenticated");
+    return authenticated;
   }, []);
 
   const value = useMemo<AuthContextValue>(() => {
@@ -92,11 +159,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       accessToken,
       isAuthenticated: status === "authenticated",
       login,
-      logout,
+      logout: clearSession,
       hasRole: (candidate) => role === candidate,
       hasAnyRole: (roles) => (role ? roles.includes(role) : false),
     };
-  }, [accessToken, login, logout, status, user]);
+  }, [accessToken, clearSession, login, status, user]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
