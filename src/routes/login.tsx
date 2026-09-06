@@ -1,15 +1,19 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { AuthNotImplementedError, useAuth } from "@/auth/auth-context";
+import { useAuth } from "@/auth/auth-context";
 import { FieldError } from "@/components/common/ValidationSummary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ApiError } from "@/lib/api/client";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    redirect: typeof search["redirect"] === "string" ? (search["redirect"] as string) : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Sign in — Enterprise Task Management" },
@@ -28,15 +32,35 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
+/** Only in-app paths are accepted as a post-login destination. */
+function safeRedirect(target: string | undefined): string {
+  if (!target || !target.startsWith("/") || target.startsWith("//")) return "/dashboard";
+  if (target.startsWith("/login")) return "/dashboard";
+  return target;
+}
+
 function LoginPage() {
-  const { login } = useAuth();
+  const { login, status } = useAuth();
+  const navigate = useNavigate();
+  const search = Route.useSearch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const destination = safeRedirect(search.redirect);
+
+  // Already signed in (or just signed in) — leave the sign-in screen.
+  useEffect(() => {
+    if (status === "authenticated") {
+      void navigate({ to: destination, replace: true });
+    }
+  }, [destination, navigate, status]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setFormError(null);
     const nextErrors: { email?: string; password?: string } = {};
     if (!email.trim()) nextErrors.email = "Email is required.";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
@@ -48,10 +72,18 @@ function LoginPage() {
     setSubmitting(true);
     try {
       await login({ email: email.trim(), password });
+      setPassword("");
+      toast.success("Signed in");
+      void navigate({ to: destination, replace: true });
     } catch (error) {
-      toast.info(
-        error instanceof AuthNotImplementedError ? error.message : "Sign in is not available yet.",
-      );
+      const message =
+        error instanceof ApiError
+          ? error.status === 401
+            ? "Email or password is incorrect."
+            : error.message
+          : "Sign in failed. Please try again.";
+      setFormError(message);
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
@@ -96,14 +128,16 @@ function LoginPage() {
               />
               <FieldError id="password-error" message={errors.password} />
             </div>
+            {formError ? (
+              <p role="alert" className="text-sm text-destructive">
+                {formError}
+              </p>
+            ) : null}
             <Button type="submit" disabled={submitting}>
               {submitting ? "Signing in…" : "Sign in"}
             </Button>
             <p className="text-center text-xs text-muted-foreground">
-              Sign-in is connected in a later step. Nothing is sent anywhere yet.{" "}
-              <Link to="/dashboard" className="underline">
-                Preview the workspace
-              </Link>
+              Your credentials are sent directly to the Enterprise Task Management API over HTTPS.
             </p>
           </form>
         </CardContent>
