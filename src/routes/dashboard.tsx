@@ -19,7 +19,7 @@ import {
 } from "@/features/dashboard/queries";
 import { ApiError } from "@/lib/api/client";
 import { PROJECT_STATUS_LABELS, TASK_STATUS_LABELS } from "@/types/domain";
-import type { DashboardCount } from "@/types/dashboard";
+import type { DashboardCount, DashboardSummary } from "@/types/dashboard";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -143,13 +143,7 @@ function DashboardContent() {
   );
 }
 
-function SummarySection({
-  summary,
-}: {
-  summary: NonNullable<ReturnType<typeof dashboardSummaryQuery>["queryKey"]> extends never
-    ? never
-    : import("@/types/dashboard").DashboardSummary;
-}) {
+function SummarySection({ summary }: { summary: DashboardSummary }) {
   const completion =
     summary.totalTasks === 0 ? 0 : Math.round((summary.completedTasks / summary.totalTasks) * 100);
 
