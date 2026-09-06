@@ -1,8 +1,10 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { LayoutDashboard, LogOut, Users, Building2, FolderKanban, ListChecks } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { useAuth } from "@/auth/auth-context";
+import { capabilities, type Capability } from "@/auth/RoleGate";
 import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
@@ -28,13 +30,22 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
+/**
+ * Navigation entries with the capability that makes each one visible.
+ * Visibility is UX only — the API's role policies remain the security boundary.
+ */
 const navigation = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/users", label: "Users", icon: Users },
-  { to: "/departments", label: "Departments", icon: Building2 },
-  { to: "/projects", label: "Projects", icon: FolderKanban },
-  { to: "/tasks", label: "Tasks", icon: ListChecks },
-] as const;
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, can: "navDashboard" },
+  { to: "/users", label: "Users", icon: Users, can: "navUsers" },
+  { to: "/departments", label: "Departments", icon: Building2, can: "navDepartments" },
+  { to: "/projects", label: "Projects", icon: FolderKanban, can: "navProjects" },
+  { to: "/tasks", label: "Tasks", icon: ListChecks, can: "navTasks" },
+] as const satisfies readonly {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  can: Capability;
+}[];
 
 /**
  * Authenticated application shell: sidebar navigation, header with breadcrumb
@@ -52,7 +63,18 @@ export function AppLayout({
   children: ReactNode;
 }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const { user, logout, status } = useAuth();
+  const { user, logout, hasAnyRole } = useAuth();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  const visibleNavigation = navigation.filter((item) => hasAnyRole(capabilities[item.can]));
+
+  async function handleSignOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    logout();
+    await navigate({ to: "/login", replace: true });
+  }
 
   return (
     <SidebarProvider>
@@ -72,7 +94,7 @@ export function AppLayout({
             <SidebarGroupLabel>Workspace</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {navigation.map((item) => (
+                {visibleNavigation.map((item) => (
                   <SidebarMenuItem key={item.to}>
                     <SidebarMenuButton asChild isActive={pathname === item.to} tooltip={item.label}>
                       <Link to={item.to}>
@@ -88,11 +110,11 @@ export function AppLayout({
         </SidebarContent>
         <SidebarFooter>
           <div className="px-2 pb-1 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
-            {user ? `${user.fullName} · ${user.role}` : "Not signed in"}
+            {user ? `${user.fullName} · ${user.role}` : "Signed out"}
           </div>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton onClick={logout} tooltip="Sign out">
+              <SidebarMenuButton onClick={() => void handleSignOut()} tooltip="Sign out">
                 <LogOut aria-hidden="true" />
                 <span>Sign out</span>
               </SidebarMenuButton>
@@ -130,20 +152,6 @@ export function AppLayout({
               </div>
               {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
             </div>
-            {status === "unauthenticated" ? (
-              <div
-                role="status"
-                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground"
-              >
-                <span>
-                  You are not signed in. Sign-in is connected in a later step, so this page is shown
-                  as a preview of the interface.
-                </span>
-                <Button asChild size="sm" variant="outline">
-                  <Link to="/login">Go to sign in</Link>
-                </Button>
-              </div>
-            ) : null}
             {children}
           </div>
         </main>
