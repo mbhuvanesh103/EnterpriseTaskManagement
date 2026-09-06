@@ -174,21 +174,17 @@ function SummarySection({ summary }: { summary: DashboardSummary }) {
 }
 
 /** `null` from the API means "not available for your role", never zero. */
-function StatCard({
-  label,
-  value,
-  hint,
-}: {
-  label: string;
-  value: number | null;
-  hint?: string;
-}) {
+function StatCard({ label, value, hint }: { label: string; value: number | null; hint?: string }) {
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardDescription>{label}</CardDescription>
         <CardTitle className="text-3xl tabular-nums">
-          {value === null ? <span className="text-base text-muted-foreground">Not available</span> : value}
+          {value === null ? (
+            <span className="text-base text-muted-foreground">Not available</span>
+          ) : (
+            value
+          )}
         </CardTitle>
       </CardHeader>
       {hint ? (

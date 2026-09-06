@@ -137,10 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [clearSession]);
 
   const login = useCallback(async (credentials: LoginCredentials) => {
-    const { data } = await apiClient.post<LoginResponsePayload>(
-      endpoints.auth.login,
-      credentials,
-    );
+    const { data } = await apiClient.post<LoginResponsePayload>(endpoints.auth.login, credentials);
     const authenticated = toAuthenticatedUser(data);
     tokenStorage.setAccessToken(data.accessToken);
     tokenStorage.setUserSnapshot(JSON.stringify(authenticated));
