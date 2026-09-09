@@ -1157,3 +1157,81 @@ no mock accounts, mock API or fake data exist anywhere in the production path.
 ### Status
 
 Phases 1–13 preserved. **Phase 15 (CRUD integration) NOT implemented.**
+
+## PHASE 15 — COMPLETED (Frontend CRUD Integration)
+
+Scope: real create / read / update / delete against the existing Phase 9–11
+controllers, plus the dashboard type/entitlement cleanup. **No new backend
+behavior, no new endpoints, no migrations, no seed or mock data, and Phase 16 is
+not started.** Backend Phases 1–12 are untouched in this phase; frontend Phases
+13–14 structure is preserved.
+
+### Files created
+
+| File | Purpose |
+| --- | --- |
+| `src/lib/api/errors.ts` | `describeApiError` / `toErrorMessage` — one place that turns an `ApiError` into a title, message, field errors and the `canRetry` / `requiresRefresh` / `isForbidden` / `isNotFound` flags |
+| `src/features/shared/query-keys.ts` | central `queryKeys`, `invalidateEntities` (dashboard included wherever a write can change a counter), shared retry policy and query options |
+| `src/features/users/users.ts` | list/detail query options + create/update/delete mutations |
+| `src/features/departments/departments.ts` | list/detail query options + create/update/delete mutations |
+| `src/features/projects/projects.ts` | list/detail query options + create/update/delete mutations |
+| `src/features/tasks/tasks.ts` | list/detail query options + create/update/delete plus dedicated assign and change-status mutations |
+| `src/components/common/FormDialog.tsx` | accessible dialog form shell with a live-region error summary |
+| `src/components/common/SelectField.tsx` | `SelectField` and `RelationSelect` (loading / error / forbidden / empty states for relation pickers) |
+| `src/components/common/ListToolbar.tsx` | shared search + filter + actions toolbar and the `matchesSearch` helper |
+
+### Files modified
+
+- `src/routes/users.tsx`, `departments.tsx`, `projects.tsx`, `tasks.tsx` — real lists from the API with search, filters, pagination shell, and add / edit / remove dialogs; relation pickers fed by the real department, manager, project and assignee lists; every write invalidates the affected list, detail and dashboard keys.
+- `src/routes/dashboard.tsx` — summary props now use the shared `DashboardSummary` / `DashboardCount` types from `src/types/dashboard.ts` instead of a locally declared shape, and the entitlement flags from the central capability map are passed into `dashboardProjectsQuery(enabled)` / `dashboardPeopleQuery(enabled)`. Unentitled roles never fire a request that would 403; those panels render the restricted state instead, and a 403 that does arrive renders restricted rather than an error.
+
+### CRUD endpoints used (all pre-existing)
+
+`/api/Users`, `/api/Departments`, `/api/Projects`, `/api/Tasks` — list, get by
+PublicId, POST, PUT, DELETE; plus `/api/Tasks/{publicId}/assign` and
+`/api/Tasks/{publicId}/status`. Assignment and status changes always use their
+own endpoints, never the general update, so the domain's transition rules stay
+authoritative. All identifiers crossing the wire are PublicIds.
+
+### Roles and restricted behavior
+
+Page and action visibility comes from the same central capability map as Phase
+14 (Admin: users, departments, projects, tasks; Manager: projects, tasks;
+Employee: tasks). **These checks remain UX only** — the ASP.NET Core role
+policies and the API's ownership checks are the single security boundary, and
+the UI never asserts ownership itself.
+
+### Errors: 400 / 401 / 403 / 404 / 409
+
+400 → inline field errors plus a summary, no retry offered. 401 → the Phase 14
+central handler invalidates the session once and redirects to `/login`. 403 →
+"Access denied" in place, no sign-out, no redirect. 404 → "No longer available"
+with a refresh. 409 → "This record changed elsewhere", and the list is refetched
+so the user re-reads before retrying (the backend's rowversion concurrency).
+
+### Verification actually performed
+
+- `bunx eslint src --fix` then `bunx eslint src`: **0 errors**, 11 pre-existing `react-refresh` warnings in untouched template `src/components/ui/*` files.
+- `bunx tsgo --noEmit`: **0 errors**.
+- `bun run build`: **succeeded**.
+- `dotnet restore` + `dotnet build EnterpriseTaskManagement.slnx` (.NET 10 SDK): **0 warnings, 0 errors**.
+- `dotnet test`: restore succeeded and reported no test project — there is still no test project in the solution.
+- **Live CRUD / auth / Swagger testing was NOT performed and is reported as blocked:** no SQL Server instance is reachable in this environment, so no database, no accounts and no rows exist. No request was ever executed against a running API, and nothing was faked to simulate one.
+
+### Security checklist
+
+No password, token or secret is logged, hard-coded or committed. No mock
+accounts, mock API, in-memory database or fabricated rows exist anywhere. Role
+checks in the frontend are presentation-only. No `AllowAnyOrigin` and no CORS
+relaxation was introduced in this phase.
+
+### Limitations / deviations
+
+- `CreateUserCommand` accepts no password and no role, so the user form collects neither; both are set by other means.
+- `UserSummary` returns a single `fullName` and no department, so the user edit dialog's department picker starts empty and must be confirmed by the operator.
+- List search and filtering are client-side over the returned page, because the API exposes no search parameter.
+- Lists render every returned record; server-side paging is not available yet.
+
+### Status
+
+Phases 1–14 preserved. **Phase 16 NOT implemented.**
