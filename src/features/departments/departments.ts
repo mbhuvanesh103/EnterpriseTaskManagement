@@ -46,9 +46,7 @@ export const departmentDetailQuery = (publicId: PublicId) =>
   queryOptions({
     queryKey: [...queryKeys.departments, "detail", publicId] as const,
     queryFn: async () => {
-      const { data } = await apiClient.get<DepartmentSummary>(
-        endpoints.departments.byId(publicId),
-      );
+      const { data } = await apiClient.get<DepartmentSummary>(endpoints.departments.byId(publicId));
       return data;
     },
     ...sharedQueryOptions,
@@ -58,10 +56,7 @@ export function useCreateDepartment() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: DepartmentPayload) => {
-      const { data } = await apiClient.post<DepartmentSummary>(
-        endpoints.departments.list,
-        payload,
-      );
+      const { data } = await apiClient.post<DepartmentSummary>(endpoints.departments.list, payload);
       return data;
     },
     onSuccess: () => invalidateEntities(queryClient, ["departments", "dashboard"]),
