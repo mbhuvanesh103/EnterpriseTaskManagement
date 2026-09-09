@@ -19,7 +19,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { departmentsListQuery } from "@/features/departments/departments";
-import { useCreateUser, useDeleteUser, useUpdateUser, usersListQuery } from "@/features/users/users";
+import {
+  useCreateUser,
+  useDeleteUser,
+  useUpdateUser,
+  usersListQuery,
+} from "@/features/users/users";
 import { describeApiError } from "@/lib/api/errors";
 import type { UserSummary } from "@/types/domain";
 

@@ -86,7 +86,9 @@ function TasksPage() {
   const [assigning, setAssigning] = useState<TaskSummary | null>(null);
 
   const list = useQuery(
-    tasksListQuery(projectFilter ? { projectId: projectFilter, enabled: canView } : { enabled: canView }),
+    tasksListQuery(
+      projectFilter ? { projectId: projectFilter, enabled: canView } : { enabled: canView },
+    ),
   );
   const projects = useQuery(projectsListQuery({ enabled: canView }));
 

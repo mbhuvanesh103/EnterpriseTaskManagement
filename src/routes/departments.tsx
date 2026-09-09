@@ -132,7 +132,11 @@ function DepartmentsPage() {
                     {canManage ? (
                       <TableCell>
                         <div className="flex flex-wrap gap-2">
-                          <Button size="sm" variant="outline" onClick={() => setEditing(department)}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setEditing(department)}
+                          >
                             Edit
                           </Button>
                           <DeleteDepartmentAction department={department} />

@@ -204,13 +204,7 @@ function ProjectsPage() {
   );
 }
 
-function ProjectDialog({
-  project,
-  onClose,
-}: {
-  project?: ProjectSummary;
-  onClose: () => void;
-}) {
+function ProjectDialog({ project, onClose }: { project?: ProjectSummary; onClose: () => void }) {
   const isEdit = Boolean(project);
   const { user, hasRole } = useAuth();
   const isAdmin = hasRole("Admin");

@@ -183,7 +183,10 @@ function Note({ label, children }: { label: string; children: React.ReactNode })
   return (
     <div>
       <span className="text-sm font-medium">{label}</span>
-      <p role="note" className="mt-1.5 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+      <p
+        role="note"
+        className="mt-1.5 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground"
+      >
         {children}
       </p>
     </div>
