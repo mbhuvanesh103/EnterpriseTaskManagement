@@ -200,7 +200,10 @@ public sealed class ValidatorTests
             "", Guid.Empty, Guid.Empty, TaskRequesterRole.Admin, AssignedUserId: Guid.Empty, Priority: "Urgent"));
 
         var props = result.Errors.Select(e => e.PropertyName).ToHashSet();
-        Assert.Superset(new HashSet<string> { "Title", "ProjectId", "RequesterPublicId", "AssignedUserId", "Priority" }, props);
+        foreach (var expected in new[] { "Title", "ProjectId", "RequesterPublicId", "AssignedUserId", "Priority" })
+        {
+            Assert.Contains(expected, props);
+        }
     }
 
     [Fact]
