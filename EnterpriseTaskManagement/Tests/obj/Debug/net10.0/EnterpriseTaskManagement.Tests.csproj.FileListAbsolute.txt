@@ -1,0 +1,6 @@
+/dev-server/EnterpriseTaskManagement/Tests/bin/Debug/net10.0/.msCoverageSourceRootsMapping_EnterpriseTaskManagement.Tests
+/dev-server/EnterpriseTaskManagement/Tests/obj/Debug/net10.0/EnterpriseTaskManagement.Tests.csproj.AssemblyReference.cache
+/dev-server/EnterpriseTaskManagement/Tests/obj/Debug/net10.0/EnterpriseTaskManagement.Tests.GeneratedMSBuildEditorConfig.editorconfig
+/dev-server/EnterpriseTaskManagement/Tests/obj/Debug/net10.0/EnterpriseTaskManagement.Tests.AssemblyInfoInputs.cache
+/dev-server/EnterpriseTaskManagement/Tests/obj/Debug/net10.0/EnterpriseTaskManagement.Tests.AssemblyInfo.cs
+/dev-server/EnterpriseTaskManagement/Tests/obj/Debug/net10.0/EnterpriseTaskManagement.Tests.csproj.CoreCompileInputs.cache
