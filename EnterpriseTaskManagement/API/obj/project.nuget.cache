@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "dgSpecHash": "ITt4jw9mXO8=",
-  "success": false,
+  "dgSpecHash": "i//eITOdKrE=",
+  "success": true,
   "projectFilePath": "/dev-server/EnterpriseTaskManagement/API/EnterpriseTaskManagement.API.csproj",
   "expectedPackageFiles": [
     "/root/.nuget/packages/azure.core/1.47.1/azure.core.1.47.1.nupkg.sha512",
@@ -59,20 +59,8 @@
     "/root/.nuget/packages/system.configuration.configurationmanager/9.0.4/system.configuration.configurationmanager.9.0.4.nupkg.sha512",
     "/root/.nuget/packages/system.identitymodel.tokens.jwt/8.0.1/system.identitymodel.tokens.jwt.8.0.1.nupkg.sha512",
     "/root/.nuget/packages/system.memory.data/8.0.1/system.memory.data.8.0.1.nupkg.sha512",
-    "/root/.nuget/packages/system.security.cryptography.pkcs/9.0.4/system.security.cryptography.pkcs.9.0.4.nupkg.sha512",
+    "/root/.nuget/packages/system.security.cryptography.pkcs/10.0.13/system.security.cryptography.pkcs.10.0.13.nupkg.sha512",
     "/root/.nuget/packages/system.security.cryptography.protecteddata/9.0.4/system.security.cryptography.protecteddata.9.0.4.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1902",
-      "level": "Error",
-      "message": "Warning As Error: Package 'System.Security.Cryptography.Pkcs' 9.0.4 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-2fmv-rv2c-59x7",
-      "projectPath": "/dev-server/EnterpriseTaskManagement/API/EnterpriseTaskManagement.API.csproj",
-      "filePath": "/dev-server/EnterpriseTaskManagement/API/EnterpriseTaskManagement.API.csproj",
-      "libraryId": "System.Security.Cryptography.Pkcs",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    }
-  ]
+  "logs": []
 }
