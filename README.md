@@ -1235,3 +1235,18 @@ relaxation was introduced in this phase.
 ### Status
 
 Phases 1–14 preserved. **Phase 16 NOT implemented.**
+
+## Phase 16 — Automated Testing and Quality Assurance
+
+**Backend:** xUnit project `EnterpriseTaskManagement/Tests` (added to `EnterpriseTaskManagement.slnx`). Unit tests only, using hand-written test doubles (`Tests/TestDoubles`) — no mocking library, no database.
+Run: `cd EnterpriseTaskManagement && dotnet restore && dotnet build EnterpriseTaskManagement.slnx && dotnet test`.
+
+Covered: value objects (Email/EmployeeCode/FullName), User/Project/TaskItem rules, every task status transition (allowed + disallowed), completed-task lock, unassign rules, soft delete; task handlers for Admin / Manager (own projects only) / Employee (own assigned tasks only, status change only); project ownership + Admin-only manager reassignment; duplicate-code/email conflicts; login generic failures; validators + `ValidationBehavior`; `GlobalExceptionHandler` ProblemDetails mapping (400/401/403/404/409/500, no leakage); reflection check that no contract exposes a numeric internal id; EF model metadata (soft-delete filter, rowversion, unique PublicId index) built with the SQL Server provider without connecting; PBKDF2 hasher and JWT claims.
+
+**Result (actual run):** 111 tests — **110 passed, 1 failed**. The failure `CreateTaskValidator_rejects_bad_priority_and_empty_ids` shows `NotEmpty()` on the nullable `AssignedUserId` does not reject `Guid.Empty` (FluentValidation compares against `null`). Impact is contained — `TaskItem.Create` treats an empty id as unassigned — so production code was left unchanged pending a decision.
+
+**Restore fix:** `dotnet restore` failed (NU1902, advisory GHSA-2fmv-rv2c-59x7 on transitive `System.Security.Cryptography.Pkcs` 9.0.4). Pinned 10.0.13 in Infrastructure.
+
+**Blocked:** no SQL Server and no real accounts in this environment, so no database integration tests, no live API/Swagger tests.
+
+**Frontend:** `bun run build` passes; ESLint 0 errors / 11 warnings (template UI files). No frontend test runner exists and no frontend tests were added in this phase — auth, navigation, 401/403, forms, task actions, query invalidation and dashboard state tests remain an open gap.
