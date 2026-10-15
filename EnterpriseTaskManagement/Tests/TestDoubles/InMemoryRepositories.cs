@@ -199,7 +199,7 @@ internal sealed class FakeTokenService : IJwtTokenService
 internal static class Build
 {
     public static User User(UserRole role = UserRole.Employee, bool active = true, string? passwordHash = null, int seq = 1) =>
-        Domain.Entities.Users.User.Rehydrate(
+        global::EnterpriseTaskManagement.Domain.Entities.Users.User.Rehydrate(
             seq,
             Guid.NewGuid(),
             FullName.Create("Test", "Person"),
@@ -211,7 +211,7 @@ internal static class Build
             passwordHash);
 
     public static Project Project(Guid managerId, string code = "PRJ-1") =>
-        Domain.Entities.Projects.Project.Create("Project", code, Guid.NewGuid(), managerId);
+        global::EnterpriseTaskManagement.Domain.Entities.Projects.Project.Create("Project", code, Guid.NewGuid(), managerId);
 
     public static TaskItem Task(Guid projectId, Guid? assignee = null, TaskItemStatus status = TaskItemStatus.Todo) =>
         TaskItem.Rehydrate(1, Guid.NewGuid(), "Task", null, projectId, assignee, TaskPriority.Medium, status, null, null);
