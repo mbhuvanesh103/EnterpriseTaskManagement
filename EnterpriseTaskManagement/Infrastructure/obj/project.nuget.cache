@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "dgSpecHash": "2zqCPh206FY=",
-  "success": true,
+  "dgSpecHash": "kpAa/ngyLQQ=",
+  "success": false,
   "projectFilePath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
   "expectedPackageFiles": [
     "/root/.nuget/packages/azure.core/1.47.1/azure.core.1.47.1.nupkg.sha512",
@@ -78,5 +78,17 @@
     "/root/.nuget/packages/system.security.permissions/9.0.0/system.security.permissions.9.0.0.nupkg.sha512",
     "/root/.nuget/packages/system.windows.extensions/9.0.0/system.windows.extensions.9.0.0.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1902",
+      "level": "Error",
+      "message": "Warning As Error: Package 'System.Security.Cryptography.Pkcs' 9.0.4 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-2fmv-rv2c-59x7",
+      "projectPath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
+      "filePath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
+      "libraryId": "System.Security.Cryptography.Pkcs",
+      "targetGraphs": [
+        "net10.0"
+      ]
+    }
+  ]
 }
