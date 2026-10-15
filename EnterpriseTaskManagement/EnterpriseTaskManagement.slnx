@@ -11,4 +11,7 @@
   <Folder Name="/Infrastructure/">
     <Project Path="Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/EnterpriseTaskManagement.Tests.csproj" />
+  </Folder>
 </Solution>
