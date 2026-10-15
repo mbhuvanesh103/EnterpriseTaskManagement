@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("EnterpriseTaskManagement.Domain")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+56e146fda1fbb5b5b760c0a9c1eb0ccc71fa4e95")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+dddfb99bc6aaeef096ec270af3f5614246ed7417")]
 [assembly: System.Reflection.AssemblyProductAttribute("EnterpriseTaskManagement.Domain")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EnterpriseTaskManagement.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

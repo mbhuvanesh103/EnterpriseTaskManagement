@@ -33,6 +33,12 @@
     <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.0" />
     <!-- JWT signing/serialization only. Token *validation* lives in the API. -->
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.15.0" />
+    <!--
+      Security pin (Phase 16): SqlClient / EF Design pull System.Security.Cryptography.Pkcs
+      9.0.4, flagged by GHSA-2fmv-rv2c-59x7 (NU1902, fails restore under
+      TreatWarningsAsErrors). Pinned to the first patched 10.0.x release.
+    -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
   </ItemGroup>
 
   <!-- Dependency direction: Domain <- Application <- Infrastructure. -->

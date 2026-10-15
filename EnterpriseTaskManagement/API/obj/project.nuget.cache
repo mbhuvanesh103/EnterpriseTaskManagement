@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "e4SvUzYvP6U=",
+  "dgSpecHash": "i//eITOdKrE=",
   "success": true,
   "projectFilePath": "/dev-server/EnterpriseTaskManagement/API/EnterpriseTaskManagement.API.csproj",
   "expectedPackageFiles": [
@@ -59,7 +59,7 @@
     "/root/.nuget/packages/system.configuration.configurationmanager/9.0.4/system.configuration.configurationmanager.9.0.4.nupkg.sha512",
     "/root/.nuget/packages/system.identitymodel.tokens.jwt/8.0.1/system.identitymodel.tokens.jwt.8.0.1.nupkg.sha512",
     "/root/.nuget/packages/system.memory.data/8.0.1/system.memory.data.8.0.1.nupkg.sha512",
-    "/root/.nuget/packages/system.security.cryptography.pkcs/9.0.4/system.security.cryptography.pkcs.9.0.4.nupkg.sha512",
+    "/root/.nuget/packages/system.security.cryptography.pkcs/10.0.13/system.security.cryptography.pkcs.10.0.13.nupkg.sha512",
     "/root/.nuget/packages/system.security.cryptography.protecteddata/9.0.4/system.security.cryptography.protecteddata.9.0.4.nupkg.sha512"
   ],
   "logs": []

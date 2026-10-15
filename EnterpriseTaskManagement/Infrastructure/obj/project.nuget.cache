@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "2zqCPh206FY=",
+  "dgSpecHash": "3A1XepNSpvI=",
   "success": true,
   "projectFilePath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
   "expectedPackageFiles": [
@@ -72,7 +72,7 @@
     "/root/.nuget/packages/system.memory.data/8.0.1/system.memory.data.8.0.1.nupkg.sha512",
     "/root/.nuget/packages/system.reflection.metadataloadcontext/7.0.0/system.reflection.metadataloadcontext.7.0.0.nupkg.sha512",
     "/root/.nuget/packages/system.resources.extensions/9.0.0/system.resources.extensions.9.0.0.nupkg.sha512",
-    "/root/.nuget/packages/system.security.cryptography.pkcs/9.0.4/system.security.cryptography.pkcs.9.0.4.nupkg.sha512",
+    "/root/.nuget/packages/system.security.cryptography.pkcs/10.0.13/system.security.cryptography.pkcs.10.0.13.nupkg.sha512",
     "/root/.nuget/packages/system.security.cryptography.protecteddata/9.0.4/system.security.cryptography.protecteddata.9.0.4.nupkg.sha512",
     "/root/.nuget/packages/system.security.cryptography.xml/9.0.0/system.security.cryptography.xml.9.0.0.nupkg.sha512",
     "/root/.nuget/packages/system.security.permissions/9.0.0/system.security.permissions.9.0.0.nupkg.sha512",
