@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <Using Include="Xunit" />
   </ItemGroup>
 
   <ItemGroup>
