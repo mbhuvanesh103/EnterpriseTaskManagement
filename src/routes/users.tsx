@@ -31,15 +31,15 @@ import type { UserSummary } from "@/types/domain";
 export const Route = createFileRoute("/users")({
   head: () => ({
     meta: [
-      { title: "Users — Enterprise Task Management" },
+      { title: "Users — TaskFlow Core" },
       {
         name: "description",
         content: "Review and manage the people in your organisation, their codes and status.",
       },
-      { property: "og:title", content: "Users — Enterprise Task Management" },
+      { property: "og:title", content: "Users — TaskFlow Core" },
       {
         property: "og:description",
-        content: "People directory for the Enterprise Task Management workspace.",
+        content: "People directory for the TaskFlow Core workspace.",
       },
     ],
   }),

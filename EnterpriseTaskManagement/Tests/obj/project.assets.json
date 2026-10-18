@@ -2618,24 +2618,31 @@
     ]
   },
   "packageFolders": {
-    "/root/.nuget/packages/": {}
+    "C:\\Users\\bhuvanesh\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/dev-server/EnterpriseTaskManagement/Tests/EnterpriseTaskManagement.Tests.csproj",
+      "projectUniqueName": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Tests\\EnterpriseTaskManagement.Tests.csproj",
       "projectName": "EnterpriseTaskManagement.Tests",
-      "projectPath": "/dev-server/EnterpriseTaskManagement/Tests/EnterpriseTaskManagement.Tests.csproj",
-      "packagesPath": "/root/.nuget/packages/",
-      "outputPath": "/dev-server/EnterpriseTaskManagement/Tests/obj/",
+      "projectPath": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Tests\\EnterpriseTaskManagement.Tests.csproj",
+      "packagesPath": "C:\\Users\\bhuvanesh\\.nuget\\packages\\",
+      "outputPath": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Tests\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "/root/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\bhuvanesh\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -2643,17 +2650,17 @@
           "framework": "net10.0",
           "targetAlias": "net10.0",
           "projectReferences": {
-            "/dev-server/EnterpriseTaskManagement/API/EnterpriseTaskManagement.API.csproj": {
-              "projectPath": "/dev-server/EnterpriseTaskManagement/API/EnterpriseTaskManagement.API.csproj"
+            "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\API\\EnterpriseTaskManagement.API.csproj": {
+              "projectPath": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\API\\EnterpriseTaskManagement.API.csproj"
             },
-            "/dev-server/EnterpriseTaskManagement/Application/EnterpriseTaskManagement.Application.csproj": {
-              "projectPath": "/dev-server/EnterpriseTaskManagement/Application/EnterpriseTaskManagement.Application.csproj"
+            "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Application\\EnterpriseTaskManagement.Application.csproj": {
+              "projectPath": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Application\\EnterpriseTaskManagement.Application.csproj"
             },
-            "/dev-server/EnterpriseTaskManagement/Domain/EnterpriseTaskManagement.Domain.csproj": {
-              "projectPath": "/dev-server/EnterpriseTaskManagement/Domain/EnterpriseTaskManagement.Domain.csproj"
+            "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Domain\\EnterpriseTaskManagement.Domain.csproj": {
+              "projectPath": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Domain\\EnterpriseTaskManagement.Domain.csproj"
             },
-            "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj": {
-              "projectPath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj"
+            "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Infrastructure\\EnterpriseTaskManagement.Infrastructure.csproj": {
+              "projectPath": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Infrastructure\\EnterpriseTaskManagement.Infrastructure.csproj"
             }
           }
         }
@@ -2713,7 +2720,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/tmp/dotnet/sdk/10.0.402/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.402/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.AspNetCore": "(,10.0.32767]",
           "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

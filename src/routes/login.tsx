@@ -15,16 +15,16 @@ export const Route = createFileRoute("/login")({
     typeof search["redirect"] === "string" ? { redirect: search["redirect"] } : {},
   head: () => ({
     meta: [
-      { title: "Sign in — Enterprise Task Management" },
+      { title: "Sign in — TaskFlow Core" },
       {
         name: "description",
         content:
-          "Sign in to the Enterprise Task Management workspace to review projects, tasks, people and departments.",
+          "Sign in to the TaskFlow Core workspace to review projects, tasks, people and departments.",
       },
-      { property: "og:title", content: "Sign in — Enterprise Task Management" },
+      { property: "og:title", content: "Sign in — TaskFlow Core" },
       {
         property: "og:description",
-        content: "Secure sign-in for the Enterprise Task Management workspace.",
+        content: "Secure sign-in for the TaskFlow Core workspace.",
       },
     ],
   }),
@@ -94,7 +94,7 @@ function LoginPage() {
         <CardHeader>
           <h1 className="text-xl font-semibold tracking-tight text-foreground">Sign in</h1>
           <CardDescription>
-            Use your work email to access the Enterprise Task Management workspace.
+            Use your work email to access the TaskFlow Core workspace.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -136,7 +136,7 @@ function LoginPage() {
               {submitting ? "Signing in…" : "Sign in"}
             </Button>
             <p className="text-center text-xs text-muted-foreground">
-              Your credentials are sent directly to the Enterprise Task Management API over HTTPS.
+              Your credentials are sent directly to the TaskFlow Core API over HTTPS.
             </p>
           </form>
         </CardContent>

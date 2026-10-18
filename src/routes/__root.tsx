@@ -12,7 +12,6 @@ import { useEffect, type ReactNode } from "react";
 import { AuthProvider } from "@/auth/auth-context";
 import { Toaster } from "@/components/ui/sonner";
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
   return (
@@ -40,7 +39,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    router.invalidate();
   }, [error]);
 
   return (
@@ -79,28 +78,29 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Enterprise Task Management" },
+      { title: "TaskFlow Core" },
       {
         name: "description",
         content:
-          "Enterprise Task Management workspace for projects, tasks, people and departments.",
+          "TaskFlow Core workspace for projects, tasks, people and departments.",
       },
-      { name: "author", content: "Enterprise Task Management" },
-      { property: "og:title", content: "Enterprise Task Management" },
+      { name: "author", content: "TaskFlow Core" },
+      { property: "og:title", content: "TaskFlow Core" },
       {
         property: "og:description",
         content: "Projects, tasks, people and departments in one workspace.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "shortcut icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "apple-touch-icon", href: "/favicon.svg" },
     ],
   }),
   shellComponent: RootShell,

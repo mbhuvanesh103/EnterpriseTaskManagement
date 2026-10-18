@@ -8,24 +8,31 @@
     "net10.0": []
   },
   "packageFolders": {
-    "/root/.nuget/packages/": {}
+    "C:\\Users\\bhuvanesh\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/dev-server/EnterpriseTaskManagement/Domain/EnterpriseTaskManagement.Domain.csproj",
+      "projectUniqueName": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Domain\\EnterpriseTaskManagement.Domain.csproj",
       "projectName": "EnterpriseTaskManagement.Domain",
-      "projectPath": "/dev-server/EnterpriseTaskManagement/Domain/EnterpriseTaskManagement.Domain.csproj",
-      "packagesPath": "/root/.nuget/packages/",
-      "outputPath": "/dev-server/EnterpriseTaskManagement/Domain/obj/",
+      "projectPath": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Domain\\EnterpriseTaskManagement.Domain.csproj",
+      "packagesPath": "C:\\Users\\bhuvanesh\\.nuget\\packages\\",
+      "outputPath": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Domain\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "/root/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\bhuvanesh\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -68,7 +75,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/tmp/dotnet/sdk/10.0.402/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.402/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.CSharp": "(,4.7.32767]",
           "Microsoft.VisualBasic": "(,10.4.32767]",

@@ -24,13 +24,13 @@ import type { DashboardCount, DashboardSummary } from "@/types/dashboard";
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Enterprise Task Management" },
+      { title: "Dashboard — TaskFlow Core" },
       {
         name: "description",
         content:
           "Headline counts for tasks, projects, people and departments across your organisation.",
       },
-      { property: "og:title", content: "Dashboard — Enterprise Task Management" },
+      { property: "og:title", content: "Dashboard — TaskFlow Core" },
       {
         property: "og:description",
         content: "Task, project and people counters for your organisation.",

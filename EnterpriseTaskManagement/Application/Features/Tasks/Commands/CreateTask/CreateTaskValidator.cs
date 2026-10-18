@@ -27,7 +27,7 @@ public sealed class CreateTaskValidator : AbstractValidator<CreateTaskCommand>
             .When(command => command.Description is not null);
 
         RuleFor(command => command.AssignedUserId)
-            .NotEmpty().WithMessage("Task assignee id must not be empty when supplied.")
+            .Must(id => id != Guid.Empty).WithMessage("Task assignee id must not be empty when supplied.")
             .When(command => command.AssignedUserId is not null);
 
         RuleFor(command => command.Priority)

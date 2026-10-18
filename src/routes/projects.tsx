@@ -36,15 +36,15 @@ import {
 export const Route = createFileRoute("/projects")({
   head: () => ({
     meta: [
-      { title: "Projects — Enterprise Task Management" },
+      { title: "Projects — TaskFlow Core" },
       {
         name: "description",
         content: "Track and manage projects by status, owning department and responsible manager.",
       },
-      { property: "og:title", content: "Projects — Enterprise Task Management" },
+      { property: "og:title", content: "Projects — TaskFlow Core" },
       {
         property: "og:description",
-        content: "Project portfolio for the Enterprise Task Management workspace.",
+        content: "Project portfolio for the TaskFlow Core workspace.",
       },
     ],
   }),

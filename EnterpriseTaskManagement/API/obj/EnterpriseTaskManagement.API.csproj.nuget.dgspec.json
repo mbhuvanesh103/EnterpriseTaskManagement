@@ -1,25 +1,31 @@
 {
   "format": 1,
   "restore": {
-    "/dev-server/EnterpriseTaskManagement/API/EnterpriseTaskManagement.API.csproj": {}
+    "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\API\\EnterpriseTaskManagement.API.csproj": {}
   },
   "projects": {
-    "/dev-server/EnterpriseTaskManagement/API/EnterpriseTaskManagement.API.csproj": {
+    "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\API\\EnterpriseTaskManagement.API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/dev-server/EnterpriseTaskManagement/API/EnterpriseTaskManagement.API.csproj",
+        "projectUniqueName": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\API\\EnterpriseTaskManagement.API.csproj",
         "projectName": "EnterpriseTaskManagement.API",
-        "projectPath": "/dev-server/EnterpriseTaskManagement/API/EnterpriseTaskManagement.API.csproj",
-        "packagesPath": "/root/.nuget/packages/",
-        "outputPath": "/dev-server/EnterpriseTaskManagement/API/obj/",
+        "projectPath": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\API\\EnterpriseTaskManagement.API.csproj",
+        "packagesPath": "C:\\Users\\bhuvanesh\\.nuget\\packages\\",
+        "outputPath": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\API\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/root/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\bhuvanesh\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -27,11 +33,11 @@
             "framework": "net10.0",
             "targetAlias": "net10.0",
             "projectReferences": {
-              "/dev-server/EnterpriseTaskManagement/Application/EnterpriseTaskManagement.Application.csproj": {
-                "projectPath": "/dev-server/EnterpriseTaskManagement/Application/EnterpriseTaskManagement.Application.csproj"
+              "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Application\\EnterpriseTaskManagement.Application.csproj": {
+                "projectPath": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Application\\EnterpriseTaskManagement.Application.csproj"
               },
-              "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj": {
-                "projectPath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj"
+              "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Infrastructure\\EnterpriseTaskManagement.Infrastructure.csproj": {
+                "projectPath": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Infrastructure\\EnterpriseTaskManagement.Infrastructure.csproj"
               }
             }
           }
@@ -88,7 +94,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/tmp/dotnet/sdk/10.0.402/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.402/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",
@@ -506,22 +512,28 @@
         }
       }
     },
-    "/dev-server/EnterpriseTaskManagement/Application/EnterpriseTaskManagement.Application.csproj": {
+    "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Application\\EnterpriseTaskManagement.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/dev-server/EnterpriseTaskManagement/Application/EnterpriseTaskManagement.Application.csproj",
+        "projectUniqueName": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Application\\EnterpriseTaskManagement.Application.csproj",
         "projectName": "EnterpriseTaskManagement.Application",
-        "projectPath": "/dev-server/EnterpriseTaskManagement/Application/EnterpriseTaskManagement.Application.csproj",
-        "packagesPath": "/root/.nuget/packages/",
-        "outputPath": "/dev-server/EnterpriseTaskManagement/Application/obj/",
+        "projectPath": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Application\\EnterpriseTaskManagement.Application.csproj",
+        "packagesPath": "C:\\Users\\bhuvanesh\\.nuget\\packages\\",
+        "outputPath": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Application\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/root/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\bhuvanesh\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -529,8 +541,8 @@
             "framework": "net10.0",
             "targetAlias": "net10.0",
             "projectReferences": {
-              "/dev-server/EnterpriseTaskManagement/Domain/EnterpriseTaskManagement.Domain.csproj": {
-                "projectPath": "/dev-server/EnterpriseTaskManagement/Domain/EnterpriseTaskManagement.Domain.csproj"
+              "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Domain\\EnterpriseTaskManagement.Domain.csproj": {
+                "projectPath": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Domain\\EnterpriseTaskManagement.Domain.csproj"
               }
             }
           }
@@ -586,7 +598,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/tmp/dotnet/sdk/10.0.402/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.402/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.CSharp": "(,4.7.32767]",
             "Microsoft.VisualBasic": "(,10.4.32767]",
@@ -864,22 +876,28 @@
         }
       }
     },
-    "/dev-server/EnterpriseTaskManagement/Domain/EnterpriseTaskManagement.Domain.csproj": {
+    "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Domain\\EnterpriseTaskManagement.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/dev-server/EnterpriseTaskManagement/Domain/EnterpriseTaskManagement.Domain.csproj",
+        "projectUniqueName": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Domain\\EnterpriseTaskManagement.Domain.csproj",
         "projectName": "EnterpriseTaskManagement.Domain",
-        "projectPath": "/dev-server/EnterpriseTaskManagement/Domain/EnterpriseTaskManagement.Domain.csproj",
-        "packagesPath": "/root/.nuget/packages/",
-        "outputPath": "/dev-server/EnterpriseTaskManagement/Domain/obj/",
+        "projectPath": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Domain\\EnterpriseTaskManagement.Domain.csproj",
+        "packagesPath": "C:\\Users\\bhuvanesh\\.nuget\\packages\\",
+        "outputPath": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Domain\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/root/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\bhuvanesh\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -922,7 +940,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/tmp/dotnet/sdk/10.0.402/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.402/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.CSharp": "(,4.7.32767]",
             "Microsoft.VisualBasic": "(,10.4.32767]",
@@ -1200,22 +1218,28 @@
         }
       }
     },
-    "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj": {
+    "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Infrastructure\\EnterpriseTaskManagement.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
+        "projectUniqueName": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Infrastructure\\EnterpriseTaskManagement.Infrastructure.csproj",
         "projectName": "EnterpriseTaskManagement.Infrastructure",
-        "projectPath": "/dev-server/EnterpriseTaskManagement/Infrastructure/EnterpriseTaskManagement.Infrastructure.csproj",
-        "packagesPath": "/root/.nuget/packages/",
-        "outputPath": "/dev-server/EnterpriseTaskManagement/Infrastructure/obj/",
+        "projectPath": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Infrastructure\\EnterpriseTaskManagement.Infrastructure.csproj",
+        "packagesPath": "C:\\Users\\bhuvanesh\\.nuget\\packages\\",
+        "outputPath": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/root/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\bhuvanesh\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -1223,11 +1247,11 @@
             "framework": "net10.0",
             "targetAlias": "net10.0",
             "projectReferences": {
-              "/dev-server/EnterpriseTaskManagement/Application/EnterpriseTaskManagement.Application.csproj": {
-                "projectPath": "/dev-server/EnterpriseTaskManagement/Application/EnterpriseTaskManagement.Application.csproj"
+              "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Application\\EnterpriseTaskManagement.Application.csproj": {
+                "projectPath": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Application\\EnterpriseTaskManagement.Application.csproj"
               },
-              "/dev-server/EnterpriseTaskManagement/Domain/EnterpriseTaskManagement.Domain.csproj": {
-                "projectPath": "/dev-server/EnterpriseTaskManagement/Domain/EnterpriseTaskManagement.Domain.csproj"
+              "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Domain\\EnterpriseTaskManagement.Domain.csproj": {
+                "projectPath": "D:\\Projects\\taskflow-core\\EnterpriseTaskManagement\\Domain\\EnterpriseTaskManagement.Domain.csproj"
               }
             }
           }
@@ -1316,7 +1340,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/tmp/dotnet/sdk/10.0.402/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.402/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.CSharp": "(,4.7.32767]",
             "Microsoft.VisualBasic": "(,10.4.32767]",

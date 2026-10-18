@@ -13,13 +13,16 @@ import { LoadingState } from "@/components/common/LoadingState";
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { status } = useAuth();
   const navigate = useNavigate();
-  const href = useRouterState({ select: (state) => state.location.href });
+  const location = useRouterState({ select: (state) => state.location });
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      void navigate({ to: "/login", search: { redirect: href }, replace: true });
+      // Send only the pathname and search (not the full origin) so the redirect
+      // param can never carry a nested /login URL that compounds on repeat.
+      const redirectTo = location.pathname + location.search;
+      void navigate({ to: "/login", search: { redirect: redirectTo }, replace: true });
     }
-  }, [href, navigate, status]);
+  }, [location, navigate, status]);
 
   if (status !== "authenticated") {
     return <LoadingState label="Checking your session" />;

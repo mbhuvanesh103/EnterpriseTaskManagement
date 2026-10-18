@@ -28,15 +28,15 @@ import type { DepartmentSummary } from "@/types/domain";
 export const Route = createFileRoute("/departments")({
   head: () => ({
     meta: [
-      { title: "Departments — Enterprise Task Management" },
+      { title: "Departments — TaskFlow Core" },
       {
         name: "description",
         content: "Browse and manage the departments that own projects and people.",
       },
-      { property: "og:title", content: "Departments — Enterprise Task Management" },
+      { property: "og:title", content: "Departments — TaskFlow Core" },
       {
         property: "og:description",
-        content: "Department structure for the Enterprise Task Management workspace.",
+        content: "Department structure for the TaskFlow Core workspace.",
       },
     ],
   }),

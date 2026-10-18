@@ -82,10 +82,10 @@ export function AppLayout({
         <SidebarHeader>
           <div className="flex items-center gap-2 px-2 py-1.5">
             <span className="grid size-8 shrink-0 place-items-center rounded-md bg-primary text-sm font-semibold text-primary-foreground">
-              ET
+              TC
             </span>
             <span className="truncate text-sm font-semibold group-data-[collapsible=icon]:hidden">
-              Enterprise Tasks
+              TaskFlow Core
             </span>
           </div>
         </SidebarHeader>

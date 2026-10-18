@@ -117,17 +117,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Session restore: a stored, unexpired token plus its identity snapshot.
+  // Always resolves (even on error) so the loading state never sticks.
   useEffect(() => {
-    const existing = tokenStorage.getAccessToken();
-    const storedUser = readStoredUser();
-    if (!existing || isTokenExpired(existing) || !storedUser) {
-      tokenStorage.clear();
-      setStatus("unauthenticated");
-      return;
+    let cancelled = false;
+
+    try {
+      const existing = tokenStorage.getAccessToken();
+      const storedUser = readStoredUser();
+
+      if (cancelled) return;
+
+      if (!existing || isTokenExpired(existing) || !storedUser) {
+        tokenStorage.clear();
+        setStatus("unauthenticated");
+      } else {
+        setAccessToken(existing);
+        setUser(storedUser);
+        setStatus("authenticated");
+      }
+    } catch {
+      if (!cancelled) {
+        tokenStorage.clear();
+        setStatus("unauthenticated");
+      }
     }
-    setAccessToken(existing);
-    setUser(storedUser);
-    setStatus("authenticated");
+
+    // Fallback: ensure initialization always completes even if something
+    // unexpected prevents the state update from taking effect.
+    const fallbackTimer = setTimeout(() => {
+      if (!cancelled) {
+        setStatus("unauthenticated");
+      }
+    }, 50);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(fallbackTimer);
+    };
   }, []);
 
   // Central 401 reaction: the API client invalidates the session once, here.
