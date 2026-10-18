@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Phase 16 — automated tests. Unit tests only: every repository / unit of work
+    is a hand-written test double (see TestDoubles/), so no database, network or
+    real account is needed. No mocking library is used on purpose.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);NU1903</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\API\EnterpriseTaskManagement.API.csproj" />
+    <ProjectReference Include="..\Application\EnterpriseTaskManagement.Application.csproj" />
+    <ProjectReference Include="..\Domain\EnterpriseTaskManagement.Domain.csproj" />
+    <ProjectReference Include="..\Infrastructure\EnterpriseTaskManagement.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
