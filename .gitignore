@@ -1,3 +1,4 @@
+
 # Build output
 bin/
 obj/
@@ -31,6 +32,15 @@ publish/
 # Environment
 .env
 .env.*
+!.env.example
+
+# Frontend build output
+node_modules/
+dist/
+.output/
+.tanstack/
+.wrangler/
+coverage/
 
 # Windows
 Thumbs.db
